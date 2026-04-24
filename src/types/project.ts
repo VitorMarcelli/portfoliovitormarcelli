@@ -1,12 +1,4 @@
-export type ProjectCategory =
-  | 'web'
-  | 'system'
-  | 'automation'
-  | 'api'
-  | 'ai'
-  | 'mobile'
-  | 'landing'
-  | 'other';
+export type ProjectCategory = string;
 
 export type ProjectStatus = 'active' | 'completed' | 'archived' | 'in-progress';
 

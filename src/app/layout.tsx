@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/Navbar';
+import ThemeProvider from '@/components/ThemeProvider';
+import LanguageProvider from '@/components/LanguageProvider';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -10,9 +12,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Vitor Marcelli — Desenvolvedor Fullstack & Construtor de Soluções',
+  title: 'Vitor Marcelli | Desenvolvedor Full Stack',
   description:
-    'Portfólio profissional de Vitor Marcelli. Desenvolvimento web, sistemas sob medida, automações, APIs e soluções digitais com execução técnica e visão de produto.',
+    'Portfólio profissional de Vitor Marcelli, Desenvolvedor Full Stack especializado em sistemas web, automações, integrações, IA, APIs, WordPress, React, Next.js, Python e soluções digitais para empresas.',
   keywords: [
     'desenvolvedor fullstack',
     'portfólio',
@@ -24,9 +26,9 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Vitor Marcelli' }],
   openGraph: {
-    title: 'Vitor Marcelli — Desenvolvedor Fullstack',
+    title: 'Vitor Marcelli | Desenvolvedor Full Stack',
     description:
-      'Portfólio profissional. Sistemas, automações, APIs e soluções digitais completas.',
+      'Portfólio profissional de Vitor Marcelli, Desenvolvedor Full Stack especializado em sistemas web, automações, integrações, IA, APIs, WordPress, React, Next.js, Python e soluções digitais para empresas.',
     type: 'website',
     locale: 'pt_BR',
   },
@@ -38,11 +40,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} antialiased`}>
+    <html lang="pt-BR" className={`${inter.variable} antialiased`} suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground font-sans">
-        <Navbar />
-        <main className="flex flex-col">{children}</main>
+        <ThemeProvider>
+          <LanguageProvider>
+            <Navbar />
+            <main className="flex flex-col">{children}</main>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
 }
+

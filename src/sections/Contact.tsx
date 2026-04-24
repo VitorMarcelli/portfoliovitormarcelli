@@ -1,51 +1,39 @@
+'use client';
+
 import SectionWrapper from '@/components/SectionWrapper';
+import { useLanguage } from '@/components/LanguageProvider';
 
 const CONTACT_LINKS = [
-  {
-    label: 'LinkedIn',
-    href: 'https://linkedin.com/in/vitormarcelli',
-    icon: '→',
-  },
-  {
-    label: 'GitHub',
-    href: 'https://github.com/vitormarcelli',
-    icon: '→',
-  },
-  {
-    label: 'E-mail',
-    href: 'mailto:contato@vitormarcelli.dev',
-    icon: '→',
-  },
+  { label: 'LinkedIn', href: 'https://linkedin.com/in/vitormarcelli' },
+  { label: 'GitHub', href: 'https://github.com/vitormarcelli' },
+  { label: 'Email', href: 'mailto:contato@vitormarcelli.dev' },
 ] as const;
 
 export default function Contact() {
+  const { t } = useLanguage();
+
   return (
-    <SectionWrapper id="contact">
+    <SectionWrapper id="contact" className="py-48 md:py-64 border-t border-border mt-32 md:mt-48">
       <div className="flex flex-col items-center text-center">
-        <span className="text-sm font-medium uppercase tracking-[0.2em] text-foreground/40">
-          Contato
-        </span>
-        <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-          Vamos conversar?
+        <h2 className="text-5xl md:text-8xl lg:text-[10vw] font-bold tracking-tighter uppercase leading-[0.85] mb-8 hover:text-accent transition-colors duration-500 whitespace-pre-line">
+          {t.contact.title}
         </h2>
-        <p className="mt-4 max-w-md text-base leading-relaxed text-foreground/60">
-          Se você procura um desenvolvedor que entrega com qualidade,
-          visão técnica e compromisso, entre em contato.
+        
+        <p className="text-xl md:text-2xl text-muted font-medium max-w-2xl mb-16">
+          {t.contact.subtitle}
         </p>
 
-        <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:gap-8">
+        <div className="flex flex-wrap justify-center gap-4 md:gap-8">
           {CONTACT_LINKS.map((link) => (
             <a
               key={link.label}
               href={link.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="group inline-flex items-center gap-2 text-base font-medium text-foreground/70 transition-colors hover:text-foreground"
+              className="text-lg md:text-2xl font-bold uppercase tracking-widest hover:text-accent transition-colors relative group"
             >
               {link.label}
-              <span className="transition-transform group-hover:translate-x-1">
-                {link.icon}
-              </span>
+              <span className="absolute -bottom-2 left-0 w-0 h-1 bg-accent transition-all duration-300 group-hover:w-full"></span>
             </a>
           ))}
         </div>

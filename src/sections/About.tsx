@@ -1,34 +1,25 @@
+'use client';
+
 import SectionWrapper from '@/components/SectionWrapper';
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function About() {
+  const { t } = useLanguage();
+
   return (
-    <SectionWrapper id="about">
-      <div className="grid gap-12 md:grid-cols-[1fr_1.5fr]">
-        <div>
-          <span className="text-sm font-medium uppercase tracking-[0.2em] text-foreground/40">
-            Sobre mim
-          </span>
-          <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-            Quem é Vitor Marcelli
+    <SectionWrapper id="about" className="bg-inv-bg text-inv-fg py-32 md:py-48">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8 items-start">
+        
+        <div className="md:col-span-4 lg:col-span-3">
+          <h2 className="text-xl font-bold uppercase tracking-tight">
+            {t.about.title}
           </h2>
         </div>
 
-        <div className="flex flex-col gap-6 text-base leading-relaxed text-foreground/70">
-          <p>
-            Desenvolvedor fullstack com foco em construir soluções que
-            funcionam de verdade. Atuo desde a concepção até a entrega,
-            unindo execução técnica, visão de produto e senso estético.
-          </p>
-          <p>
-            Minha prática envolve sistemas sob medida, automações complexas,
-            integrações com APIs governamentais, pipelines de dados e
-            interfaces de alto impacto visual.
-          </p>
-          <p>
-            Busco entregar com qualidade de produto, não apenas código. Cada
-            solução precisa resolver o problema real do cliente com
-            elegância e eficiência.
-          </p>
+        <div className="md:col-span-8 lg:col-span-7 flex flex-col gap-8 text-xl md:text-2xl lg:text-3xl font-medium leading-[1.3] text-inv-fg/80">
+          <p className="text-inv-fg">{t.about.paragraphs[0]}</p>
+          <p>{t.about.paragraphs[1]}</p>
+          <p>{t.about.paragraphs[2]}</p>
         </div>
       </div>
     </SectionWrapper>

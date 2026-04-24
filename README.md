@@ -1,45 +1,49 @@
-# Portfólio — Vitor Marcelli
+# Portfólio | Vitor Marcelli
 
-Portfólio digital premium de Vitor Marcelli. Aplicação web responsiva de apresentação profissional, posicionamento técnico e vitrine de projetos.
+Portfólio profissional desenvolvido para apresentar minha trajetória, projetos, habilidades técnicas e soluções digitais.
 
-## Stack
+## Link online
 
-- **Next.js 15** (App Router)
-- **TypeScript** (strict mode)
-- **Tailwind CSS v4**
-- **Framer Motion**
+https://vitormarcelli.github.io/portfoliovitormarcelli/
 
-## Como rodar
+## Tecnologias
+
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Framer Motion
+- GitHub Pages
+- GitHub Actions
+
+## Funcionalidades
+
+- Apresentação profissional
+- Seção de projetos
+- Seção de tecnologias
+- Responsividade
+- Tema visual moderno
+- Deploy automatizado
+
+## Como rodar localmente
 
 ```bash
-# Instalar dependências
 npm install
-
-# Iniciar dev server
 npm run dev
+```
 
-# Build de produção
+## Build
+
+```bash
 npm run build
 ```
 
-O servidor de desenvolvimento estará disponível em [http://localhost:3000](http://localhost:3000).
+## Deploy
 
-## Estrutura
+O deploy é feito automaticamente via GitHub Actions para GitHub Pages sempre que houver push na branch `main`.
 
-```
-src/
-├── app/          # Rotas e layout (Next.js App Router)
-├── components/   # Componentes reutilizáveis
-├── sections/     # Seções da página principal
-├── data/         # Dados estruturados (projetos)
-├── types/        # Interfaces TypeScript
-├── hooks/        # Hooks customizados
-├── lib/          # Utilitários
-└── styles/       # Estilos adicionais
-```
+## Autor
 
-## Documentação
+Vitor Marcelli
 
-- [PRD do Produto](docs/PRD_Portfolio_Vitor_Marcelli.md)
-- [Contexto de Execução](docs/EXECUTION_CONTEXT.md)
-- [Plano Fase 1](docs/PHASE_01_IMPLEMENTATION.md)
+- LinkedIn: https://www.linkedin.com/in/vitor-augusto-marcelli-ba4070220/
+- GitHub: https://github.com/VitorMarcelli

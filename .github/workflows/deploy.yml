@@ -1,0 +1,93 @@
+name: Deploy Portfolio to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Portfolio
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect package manager
+        id: detect-package-manager
+        run: |
+          if [ -f "${{ github.workspace }}/pnpm-lock.yaml" ]; then
+            echo "manager=pnpm" >> $GITHUB_OUTPUT
+            echo "install=pnpm install --frozen-lockfile" >> $GITHUB_OUTPUT
+            echo "build=pnpm build" >> $GITHUB_OUTPUT
+          elif [ -f "${{ github.workspace }}/yarn.lock" ]; then
+            echo "manager=yarn" >> $GITHUB_OUTPUT
+            echo "install=yarn install --frozen-lockfile" >> $GITHUB_OUTPUT
+            echo "build=yarn build" >> $GITHUB_OUTPUT
+          elif [ -f "${{ github.workspace }}/bun.lockb" ]; then
+            echo "manager=bun" >> $GITHUB_OUTPUT
+            echo "install=bun install --frozen-lockfile" >> $GITHUB_OUTPUT
+            echo "build=bun run build" >> $GITHUB_OUTPUT
+          else
+            echo "manager=npm" >> $GITHUB_OUTPUT
+            echo "install=npm ci" >> $GITHUB_OUTPUT
+            echo "build=npm run build" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node.js
+        if: steps.detect-package-manager.outputs.manager != 'bun'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: ${{ steps.detect-package-manager.outputs.manager }}
+
+      - name: Setup pnpm
+        if: steps.detect-package-manager.outputs.manager == 'pnpm'
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Bun
+        if: steps.detect-package-manager.outputs.manager == 'bun'
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: ${{ steps.detect-package-manager.outputs.install }}
+
+      - name: Build project
+        run: ${{ steps.detect-package-manager.outputs.build }}
+        env:
+          GITHUB_ACTIONS: "true"
+          NEXT_PUBLIC_BASE_PATH: "/portfoliovitormarcelli"
+
+      - name: Add nojekyll file
+        run: touch ./out/.nojekyll
+
+      - name: Upload GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+
+    steps:
+      - name: Deploy artifact
+        uses: actions/deploy-pages@v4

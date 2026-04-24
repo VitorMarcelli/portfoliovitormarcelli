@@ -1,62 +1,35 @@
-import SectionWrapper from '@/components/SectionWrapper';
+'use client';
 
-const SERVICES = [
-  {
-    title: 'Desenvolvimento Web',
-    description:
-      'Sites, landing pages e aplicações web completas com foco em performance e experiência.',
-  },
-  {
-    title: 'Sistemas Sob Medida',
-    description:
-      'Soluções personalizadas que atendem necessidades reais do negócio, do backend ao frontend.',
-  },
-  {
-    title: 'Automações',
-    description:
-      'Scripts e sistemas que automatizam processos complexos e repetitivos com confiabilidade.',
-  },
-  {
-    title: 'Integrações & APIs',
-    description:
-      'Conexão entre sistemas, serviços externos e APIs governamentais com tratamento robusto.',
-  },
-  {
-    title: 'Inteligência Artificial',
-    description:
-      'Aplicação prática de IA em fluxos de trabalho e produtos reais.',
-  },
-  {
-    title: 'Aplicativos & Soluções',
-    description:
-      'Produtos digitais completos — da ideia ao deploy — com arquitetura escalável.',
-  },
-] as const;
+import SectionWrapper from '@/components/SectionWrapper';
+import { useLanguage } from '@/components/LanguageProvider';
 
 export default function Services() {
-  return (
-    <SectionWrapper id="services">
-      <span className="text-sm font-medium uppercase tracking-[0.2em] text-foreground/40">
-        Serviços
-      </span>
-      <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-        O que eu faço
-      </h2>
+  const { t } = useLanguage();
 
-      <div className="mt-12 grid gap-px border border-foreground/10 bg-foreground/10 sm:grid-cols-2 lg:grid-cols-3">
-        {SERVICES.map((service) => (
-          <div
-            key={service.title}
-            className="flex flex-col gap-3 bg-background p-8 transition-colors hover:bg-foreground/[0.02]"
-          >
-            <h3 className="text-base font-semibold text-foreground">
-              {service.title}
-            </h3>
-            <p className="text-sm leading-relaxed text-foreground/60">
-              {service.description}
-            </p>
-          </div>
-        ))}
+  return (
+    <SectionWrapper id="services" className="py-32 md:py-48">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-12 md:gap-8 items-start">
+        <div className="md:col-span-4 lg:col-span-3">
+          <h2 className="text-xl font-bold uppercase tracking-tight">
+            {t.services.title}
+          </h2>
+        </div>
+
+        <div className="md:col-span-8 lg:col-span-9 w-full flex flex-col">
+          {t.services.items.map((service, idx) => (
+            <div
+              key={service.title}
+              className={`group flex flex-col md:flex-row gap-4 border-t border-border py-8 md:py-12 transition-colors hover:border-foreground ${idx === t.services.items.length - 1 ? 'border-b' : ''}`}
+            >
+              <h3 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground transition-transform duration-500 ease-out group-hover:translate-x-4 md:w-1/2">
+                {service.title}
+              </h3>
+              <p className="text-lg md:text-xl leading-relaxed text-muted md:w-1/2 pt-2 md:pt-0">
+                {service.description}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
     </SectionWrapper>
   );

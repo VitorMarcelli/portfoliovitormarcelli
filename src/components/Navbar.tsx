@@ -2,22 +2,24 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const NAV_ITEMS = [
-  { label: 'Início', href: '#hero' },
-  { label: 'Sobre', href: '#about' },
-  { label: 'Serviços', href: '#services' },
-  { label: 'Projetos', href: '#projects' },
-  { label: 'Stack', href: '#stack' },
-  { label: 'Contato', href: '#contact' },
-] as const;
+import ThemeToggle from './ThemeToggle';
+import LanguageToggle from './LanguageToggle';
+import { useLanguage } from './LanguageProvider';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { t } = useLanguage();
+
+  const NAV_ITEMS = [
+    { label: t.nav.work, href: '#projects' },
+    { label: t.nav.services, href: '#services' },
+    { label: t.nav.stack, href: '#stack' },
+    { label: t.nav.contact, href: '#contact' },
+  ];
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    const onScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
@@ -26,81 +28,92 @@ export default function Navbar() {
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className={`fixed top-0 left-0 z-50 w-full transition-colors duration-300 ${
-        scrolled
-          ? 'bg-background/80 backdrop-blur-md border-b border-foreground/5'
-          : 'bg-transparent'
-      }`}
+      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      className={`fixed top-0 left-0 z-50 w-full mix-blend-difference text-white transition-all duration-500`}
     >
-      <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4 md:px-12">
+      <nav className="flex items-center justify-between px-6 py-6 md:px-12">
         <a
           href="#hero"
-          className="text-lg font-bold tracking-tight text-foreground"
+          className="text-lg font-bold tracking-tighter uppercase"
         >
-          VM<span className="text-accent">.</span>
+          VM<span className="text-accent text-2xl leading-none">.</span>
         </a>
 
         {/* Desktop nav */}
-        <ul className="hidden items-center gap-8 md:flex">
-          {NAV_ITEMS.map(({ label, href }) => (
-            <li key={href}>
-              <a
-                href={href}
-                className="text-sm font-medium text-foreground/60 transition-colors hover:text-foreground"
-              >
-                {label}
-              </a>
-            </li>
-          ))}
-        </ul>
+        <div className="hidden items-center gap-10 md:flex">
+          <ul className="flex items-center gap-10">
+            {NAV_ITEMS.map(({ label, href }) => (
+              <li key={href}>
+                <a
+                  href={href}
+                  className="text-sm font-medium uppercase tracking-widest opacity-60 transition-opacity hover:opacity-100"
+                >
+                  {label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
 
         {/* Mobile menu toggle */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="flex flex-col gap-1.5 md:hidden"
+          className="flex flex-col gap-[5px] md:hidden z-50 mix-blend-difference text-white"
           aria-label="Toggle menu"
         >
           <span
-            className={`block h-0.5 w-6 bg-foreground transition-transform ${
-              mobileOpen ? 'translate-y-2 rotate-45' : ''
+            className={`block h-[2px] w-6 bg-current transition-transform duration-300 ${
+              mobileOpen ? 'translate-y-[7px] rotate-45' : ''
             }`}
           />
           <span
-            className={`block h-0.5 w-6 bg-foreground transition-opacity ${
+            className={`block h-[2px] w-6 bg-current transition-opacity duration-300 ${
               mobileOpen ? 'opacity-0' : ''
             }`}
           />
           <span
-            className={`block h-0.5 w-6 bg-foreground transition-transform ${
-              mobileOpen ? '-translate-y-2 -rotate-45' : ''
+            className={`block h-[2px] w-6 bg-current transition-transform duration-300 ${
+              mobileOpen ? '-translate-y-[7px] -rotate-45' : ''
             }`}
           />
         </button>
       </nav>
 
-      {/* Mobile menu */}
+      {/* Mobile menu overlay */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="border-b border-foreground/5 bg-background/95 backdrop-blur-lg md:hidden"
+            initial={{ opacity: 0, y: '-100%' }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: '-100%' }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-40 flex flex-col items-center justify-center bg-background text-foreground md:hidden"
           >
-            <ul className="flex flex-col gap-4 px-6 py-6">
+            <ul className="flex flex-col items-center gap-8">
               {NAV_ITEMS.map(({ label, href }) => (
-                <li key={href}>
-                  <a
-                    href={href}
-                    onClick={() => setMobileOpen(false)}
-                    className="text-base font-medium text-foreground/70 transition-colors hover:text-foreground"
+                <li key={href} className="overflow-hidden">
+                  <motion.div
+                    initial={{ y: '100%' }}
+                    animate={{ y: 0 }}
+                    transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
                   >
-                    {label}
-                  </a>
+                    <a
+                      href={href}
+                      onClick={() => setMobileOpen(false)}
+                      className="text-4xl font-bold uppercase tracking-tight hover:text-accent transition-colors"
+                    >
+                      {label}
+                    </a>
+                  </motion.div>
                 </li>
               ))}
             </ul>
+            <div className="mt-12 flex items-center gap-6">
+              <LanguageToggle />
+              <ThemeToggle />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
