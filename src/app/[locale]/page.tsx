@@ -25,7 +25,7 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
 
   return (
     <>
-      <WelcomeLoader subtitle="Loading Portfolio..." />
+      <WelcomeLoader locale={locale} />
       <Hero t={t} settings={settings} />
       <Projects t={t} locale={locale} projects={projects} />
       <About t={t} />

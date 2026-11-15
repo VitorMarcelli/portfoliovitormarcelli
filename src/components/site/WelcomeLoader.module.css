@@ -161,9 +161,41 @@
   filter: blur(0);
 }
 
-.entered .letter {
+/* Greeting swap between languages: letters leave upwards one by one, the next word enters like the first. */
+.title[data-phase='in'] .letter {
   opacity: 1;
   transform: translateY(0);
+}
+
+.title[data-phase='out'] .letter {
+  opacity: 0;
+  transform: translateY(-1rem);
+  transition-duration: 350ms;
+}
+
+.title[data-phase='pre'] .letter {
+  opacity: 0;
+  transform: translateY(1rem);
+  transition: none;
+}
+
+.subText {
+  display: inline-block;
+  transition: opacity 500ms ease-out, transform 500ms ease-out, filter 500ms ease-out;
+}
+
+.subText[data-phase='out'] {
+  opacity: 0;
+  transform: translateY(-0.5rem);
+  filter: blur(4px);
+  transition-duration: 300ms;
+}
+
+.subText[data-phase='pre'] {
+  opacity: 0;
+  transform: translateY(0.5rem);
+  filter: blur(4px);
+  transition: none;
 }
 
 @media (min-width: 768px) {
