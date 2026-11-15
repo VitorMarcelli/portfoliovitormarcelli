@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { AiForm, ProfileForm, WhatsappPanel } from '@/components/admin/SettingsForms';
+import { AiForm, PasswordForm, ProfileForm, WhatsappPanel } from '@/components/admin/SettingsForms';
 import { PageHeader, Panel } from '@/components/admin/ui';
 import { isAiConfigured } from '@/lib/ai/attendant';
 import { requireAdmin } from '@/lib/auth';
@@ -50,6 +50,9 @@ export default async function SettingsPage() {
               Defina EVOLUTION_API_URL, EVOLUTION_API_KEY e EVOLUTION_INSTANCE na Vercel para conectar seu número aqui.
             </p>
           )}
+        </Panel>
+        <Panel title="Segurança">
+          <PasswordForm />
         </Panel>
         <Panel title="Variáveis de ambiente">
           <ul className="divide-y divide-border text-sm">

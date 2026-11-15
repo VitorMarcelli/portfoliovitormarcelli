@@ -63,6 +63,18 @@ export async function saveAiSettings(_prev: SettingsFormState, formData: FormDat
   return { ok: true };
 }
 
+export async function changePassword(_prev: SettingsFormState, formData: FormData): Promise<SettingsFormState> {
+  const { supabase } = await requireAdmin();
+  const password = String(formData.get('password') || '');
+  const confirmation = String(formData.get('confirmation') || '');
+  if (password.length < 10) return { error: 'Use pelo menos 10 caracteres.' };
+  if (password !== confirmation) return { error: 'As duas senhas não são iguais.' };
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
 export interface WhatsappActionResult {
   state?: ConnectionState;
   qr?: string | null;

@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- the QR code is a data URL returned by the API */
 import { useActionState, useState, useTransition } from 'react';
 import {
+  changePassword,
   saveAiSettings,
   saveProfileSettings,
   whatsappConnect,
@@ -99,6 +100,26 @@ export function AiForm({ settings, aiConfigured }: { settings: SettingsRow; aiCo
           {pending ? 'Salvando…' : 'Salvar atendimento'}
         </button>
         <Feedback state={state} okText="Atendimento atualizado." />
+      </div>
+    </form>
+  );
+}
+
+export function PasswordForm() {
+  const [state, action, pending] = useActionState(changePassword, {});
+  return (
+    <form action={action} className="grid gap-4">
+      <Field label="Nova senha" hint="mínimo 10 caracteres">
+        <input name="password" type="password" required minLength={10} autoComplete="new-password" className={inputClass} />
+      </Field>
+      <Field label="Repita a nova senha">
+        <input name="confirmation" type="password" required minLength={10} autoComplete="new-password" className={inputClass} />
+      </Field>
+      <div className="flex items-center gap-4">
+        <button type="submit" disabled={pending} className={buttonPrimary}>
+          {pending ? 'Salvando…' : 'Trocar senha'}
+        </button>
+        <Feedback state={state} okText="Senha alterada." />
       </div>
     </form>
   );
