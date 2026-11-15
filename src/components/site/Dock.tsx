@@ -35,6 +35,8 @@ const ICON_SIZE = 40;
 
 interface DockContextValue {
   mouseX: MotionValue<number>;
+  /** Items register a function that caches their resting center; the panel calls them on mouse enter. */
+  registerMeasure: (measure: () => void) => () => void;
 }
 
 const DockContext = createContext<DockContextValue | null>(null);
@@ -47,6 +49,17 @@ function useDock() {
 
 function DockPanel({ children, label }: { children: ReactNode; label: string }) {
   const mouseX = useMotionValue(Infinity);
+  const measures = useRef(new Set<() => void>());
+  const context = useMemo<DockContextValue>(
+    () => ({
+      mouseX,
+      registerMeasure: (measure) => {
+        measures.current.add(measure);
+        return () => measures.current.delete(measure);
+      },
+    }),
+    [mouseX],
+  );
   const isHovered = useMotionValue(0);
   const maxHeight = useMemo(() => Math.max(128, MAGNIFICATION + MAGNIFICATION / 2 + 4), []);
   const heightRow = useTransform(isHovered, [0, 1], [PANEL_HEIGHT, maxHeight]);
@@ -55,9 +68,10 @@ function DockPanel({ children, label }: { children: ReactNode; label: string }) 
   return (
     <motion.div style={{ height, scrollbarWidth: 'none' }} className="mx-2 flex max-w-full items-end overflow-x-auto">
       <motion.div
-        onMouseMove={({ pageX }) => {
+        onMouseEnter={() => measures.current.forEach((measure) => measure())}
+        onMouseMove={({ clientX }) => {
           isHovered.set(1);
-          mouseX.set(pageX);
+          mouseX.set(clientX);
         }}
         onMouseLeave={() => {
           isHovered.set(0);
@@ -68,7 +82,7 @@ function DockPanel({ children, label }: { children: ReactNode; label: string }) 
         role="toolbar"
         aria-label={label}
       >
-        <DockContext.Provider value={{ mouseX }}>{children}</DockContext.Provider>
+        <DockContext.Provider value={context}>{children}</DockContext.Provider>
       </motion.div>
     </motion.div>
   );
@@ -93,13 +107,22 @@ function DockItem({
   ariaLabel: string;
 }) {
   const ref = useRef<HTMLElement>(null);
-  const { mouseX } = useDock();
+  const { mouseX, registerMeasure } = useDock();
   const isHovered = useMotionValue(0);
+  const center = useRef<number | null>(null);
 
-  const mouseDistance = useTransform(mouseX, (x) => {
-    const rect = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
-    return x - rect.x - rect.width / 2;
-  });
+  // Measure once per hover (resting position, like the macOS dock) instead of on every mouse move:
+  // reading layout while the icons are resizing forced a reflow per item per frame and made fast moves stutter.
+  useEffect(
+    () =>
+      registerMeasure(() => {
+        const rect = ref.current?.getBoundingClientRect();
+        if (rect) center.current = rect.x + rect.width / 2;
+      }),
+    [registerMeasure],
+  );
+
+  const mouseDistance = useTransform(mouseX, (x) => (center.current === null ? Infinity : x - center.current));
   const widthRaw = useTransform(mouseDistance, [-DISTANCE, 0, DISTANCE], [ICON_SIZE, MAGNIFICATION, ICON_SIZE]);
   const width = useSpring(widthRaw, SPRING);
 
@@ -302,7 +325,7 @@ export default function SiteDock({ labels, github, linkedin, email, whatsappHref
     <motion.nav
       aria-label={labels.toolbar}
       initial={false}
-      animate={ready ? { opacity: 1, y: 0, filter: 'blur(0px)' } : { opacity: 0, y: 40, filter: 'blur(6px)' }}
+      animate={ready ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: ready ? 0.15 : 0 }}
       style={{ pointerEvents: ready ? 'auto' : 'none' }}
       className="fixed bottom-4 left-1/2 z-50 mb-4 -translate-x-1/2"
