@@ -1,11 +1,5 @@
-'use client';
-
-import dynamic from 'next/dynamic';
-import { useRef, type CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 import type { Dictionary } from '@/i18n/dictionaries';
-
-// The 3D scene loads after the text, so it never delays the first paint or search engines.
-const HeroScene = dynamic(() => import('./HeroScene'), { ssr: false });
 
 const NAME = 'VITOR MARCELLI';
 
@@ -38,12 +32,14 @@ function Letters({ text, startMs }: { text: string; startMs: number }) {
 const delay = (ms: number) => ({ '--d': `${ms}ms` }) as CSSProperties;
 
 export default function HomeHero({ t }: { t: Dictionary['hero'] }) {
-  const sectionRef = useRef<HTMLElement>(null);
-
   return (
-    <section ref={sectionRef} id="inicio" className="hero-stage relative min-h-svh w-full overflow-hidden">
-      <HeroScene containerRef={sectionRef} />
-
+    <section
+      id="inicio"
+      className="hero-stage relative min-h-svh w-full overflow-hidden"
+      data-scene-x="0"
+      data-scene-y="0"
+      data-scene-scale="1"
+    >
       <div className="relative z-20 flex min-h-svh flex-col items-center justify-center px-4 pb-24 text-center">
         <div className="max-w-5xl space-y-6">
           <h1

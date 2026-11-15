@@ -55,7 +55,7 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex items-center justify-center rounded-full bg-foreground px-7 py-3.5 font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="inline-flex items-center justify-center rounded-full bg-accent px-7 py-3.5 font-medium text-accent-fg shadow-[0_10px_30px_-12px_var(--glow)] transition-opacity hover:opacity-90 disabled:opacity-60"
         >
           {pending ? t.sending : t.submit}
         </button>

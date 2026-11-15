@@ -7,6 +7,8 @@ import ThemeScript from '@/components/ThemeScript';
 import SiteFooter from '@/components/site/SiteFooter';
 import Tracker from '@/components/site/Tracker';
 import SiteDock from '@/components/site/Dock';
+import NightSceneLoader from '@/components/site/NightSceneLoader';
+import RevealObserver from '@/components/site/RevealObserver';
 import { getPublicSettings } from '@/lib/data';
 import { whatsappLink } from '@/lib/whatsapp/link';
 import { getDictionary, isLocale, localePath, locales } from '@/i18n/dictionaries';
@@ -73,7 +75,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
         <ThemeScript />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }} />
       </head>
-      <body className="min-h-screen">
+      <body className="night min-h-screen">
         <a
           href="#conteudo"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[60] focus:rounded focus:bg-accent focus:px-3 focus:py-2 focus:text-accent-fg"
@@ -90,6 +92,8 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
           email={CONTACT.email}
           whatsappHref={settings.whatsappNumber ? whatsappLink(settings.whatsappNumber, t.contact.whatsappMessage) : null}
         />
+        <NightSceneLoader />
+        <RevealObserver />
         <ThemeKeeper />
         <Tracker />
       </body>

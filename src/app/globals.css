@@ -123,6 +123,156 @@ body {
   animation-play-state: paused;
 }
 
+
+/*
+ * ─── "Continuous night": palette of the welcome screen for the public site only ───
+ * Applied by the `night` class on the public <body>; the admin panel keeps the base tokens.
+ */
+.night {
+  --background: #f1f5f9;
+  --foreground: #1e1b4b;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-2: rgba(238, 242, 255, 0.85);
+  --muted: #4b5280;
+  --border: rgba(99, 102, 241, 0.2);
+  --accent: #4f46e5;
+  --accent-fg: #ffffff;
+  --accent-text: #4338ca;
+  --ink: #1e1b4b;
+  --ink-fg: #f1f5f9;
+  --ink-muted: #a5b4fc;
+  --focus: #6366f1;
+  --glow: rgba(99, 102, 241, 0.35);
+  --beam: rgba(99, 102, 241, 0.95);
+  /* Same type as the hero everywhere on the public site (Outfit headings, Inter text). */
+  --font-display: var(--font-hero-display);
+  --font-body: var(--font-hero-body);
+}
+
+.dark .night {
+  --background: #050a18;
+  --foreground: #eef2ff;
+  --surface: rgba(10, 18, 38, 0.82);
+  --surface-2: rgba(16, 28, 56, 0.78);
+  --muted: #9fb0d0;
+  --border: rgba(100, 180, 255, 0.16);
+  --accent: #3b82f6;
+  --accent-fg: #ffffff;
+  --accent-text: #96c8ff;
+  --ink: #96c8ff;
+  --ink-fg: #050a18;
+  --ink-muted: #64b4ff;
+  --focus: #96c8ff;
+  --glow: rgba(59, 130, 246, 0.35);
+  --beam: rgba(150, 200, 255, 0.95);
+}
+
+/* Cards: translucent panel with a blue edge; on hover a beam of light travels the border
+   (the same beam that circles the welcome-screen orbs). No backdrop blur: it would repaint
+   every frame over the animated scene. */
+@property --beam-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes beam-travel {
+  to {
+    --beam-angle: 360deg;
+  }
+}
+
+.glow-card {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px transparent, 0 18px 50px -30px var(--glow);
+  transition: border-color 0.4s, box-shadow 0.4s;
+}
+
+.glow-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(from var(--beam-angle), transparent 0deg 290deg, var(--beam) 340deg, transparent 360deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s;
+  animation: beam-travel 3.2s linear infinite;
+  animation-play-state: paused;
+  pointer-events: none;
+}
+
+.glow-card:hover,
+.glow-card:focus-within {
+  border-color: transparent;
+  box-shadow: 0 0 0 1px transparent, 0 22px 60px -24px var(--glow);
+}
+
+.glow-card:hover::before,
+.glow-card:focus-within::before {
+  opacity: 1;
+  animation-play-state: running;
+}
+
+/* Entrances on scroll (RevealObserver adds .is-visible once). */
+[data-reveal]:not(.reveal-title) {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.8s ease-out var(--reveal-delay, 0ms),
+    transform 0.8s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+    border-color 0.4s,
+    box-shadow 0.4s;
+}
+
+[data-reveal].is-visible:not(.reveal-title) {
+  opacity: 1;
+  transform: none;
+}
+
+.title-char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s cubic-bezier(0.215, 0.61, 0.355, 1), transform 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+  transition-delay: calc(var(--i, 0) * 20ms);
+}
+
+.reveal-title.is-visible .title-char {
+  opacity: 1;
+  transform: none;
+}
+
+/* Gradient text in the palette, for section titles. */
+.night-gradient {
+  background-image: linear-gradient(to right, var(--accent), var(--accent-text));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.night-gradient .title-char {
+  background-image: inherit;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Without JavaScript, never hide content. */
+@media (scripting: none) {
+  [data-reveal],
+  .title-char {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
 /* ─── Home hero: same palette as the welcome screen, so one dissolves into the other ─── */
 .hero-stage {
   --hero-bg: #f1f5f9;
@@ -134,9 +284,6 @@ body {
   --hero-highlight: #3730a3;
   --hero-muted: rgba(49, 46, 129, 0.45);
   --hero-line: rgba(49, 46, 129, 0.3);
-  background: var(--hero-bg);
-  /* Clips the fixed 3D canvas to this section: it stays still while the hero scrolls away. */
-  clip-path: inset(0);
 }
 
 .dark .hero-stage {

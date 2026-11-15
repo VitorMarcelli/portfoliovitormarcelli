@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import type { CSSProperties, ReactNode } from 'react';
 import ContactForm from '@/components/site/ContactForm';
+import HomeHero from '@/components/site/HomeHero';
 import ProjectCover from '@/components/site/ProjectCover';
+import RevealTitle from '@/components/site/RevealTitle';
 import TrackedLink from '@/components/site/TrackedLink';
 import WelcomeLoader from '@/components/site/WelcomeLoader';
-import HomeHero from '@/components/site/HomeHero';
 import { getDictionary, isLocale, localePath, type Dictionary } from '@/i18n/dictionaries';
 import { getExperiences, getProjects, getPublicSettings } from '@/lib/data';
 import { CONTACT } from '@/lib/env';
@@ -39,15 +41,57 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
   );
 }
 
+/* ───────────────────────── Building blocks ───────────────────────── */
+
 const container = 'mx-auto max-w-6xl px-4 sm:px-6';
 
-function SectionTitle({ id, children }: { id: string; children: React.ReactNode }) {
+/** Where the 3D sphere sits while this section is in view (read by NightScene). */
+type Scene = { x: number; y?: number; scale: number };
+
+function NightSection({
+  id,
+  labelledBy,
+  scene,
+  children,
+  className = '',
+}: {
+  id?: string;
+  labelledBy: string;
+  scene: Scene;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <h2 id={id} className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-      {children}
-    </h2>
+    <section
+      id={id}
+      aria-labelledby={labelledBy}
+      data-scene-x={scene.x}
+      data-scene-y={scene.y ?? 0}
+      data-scene-scale={scene.scale}
+      className={`relative scroll-mt-10 py-24 sm:py-32 ${className}`}
+    >
+      <div className={container}>{children}</div>
+    </section>
   );
 }
+
+function SectionHeader({ id, title, subtitle, aside }: { id: string; title: string; subtitle?: string; aside?: ReactNode }) {
+  return (
+    <div className="mb-12 flex flex-col gap-4 md:mb-16 md:flex-row md:items-end md:justify-between">
+      <div className="max-w-3xl">
+        <RevealTitle id={id} text={title} className="night-gradient font-display text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl" />
+        {subtitle && (
+          <p data-reveal className="mt-4 max-w-xl text-lg text-muted" style={reveal(250)}>
+            {subtitle}
+          </p>
+        )}
+      </div>
+      {aside}
+    </div>
+  );
+}
+
+const reveal = (delayMs: number) => ({ '--reveal-delay': `${delayMs}ms` }) as CSSProperties;
 
 function ProjectLinks({ project, t }: { project: Project; t: Dictionary }) {
   return (
@@ -58,7 +102,7 @@ function ProjectLinks({ project, t }: { project: Project; t: Dictionary }) {
           href={project.liveUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline decoration-border underline-offset-4 hover:decoration-foreground"
+          className="underline decoration-border underline-offset-4 hover:decoration-accent-text"
         >
           {t.projects.viewLive}
         </TrackedLink>
@@ -69,7 +113,7 @@ function ProjectLinks({ project, t }: { project: Project; t: Dictionary }) {
           href={project.repoUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline decoration-border underline-offset-4 hover:decoration-foreground"
+          className="underline decoration-border underline-offset-4 hover:decoration-accent-text"
         >
           {t.projects.viewCode}
         </TrackedLink>
@@ -78,121 +122,133 @@ function ProjectLinks({ project, t }: { project: Project; t: Dictionary }) {
   );
 }
 
+function Chips({ items }: { items: string[] }) {
+  return (
+    <ul className="flex flex-wrap gap-2">
+      {items.map((item) => (
+        <li key={item} className="rounded-full border border-border px-3 py-1 text-sm text-muted">
+          {item}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/* ───────────────────────── Sections ───────────────────────── */
+
 function Projects({ t, locale, projects }: { t: Dictionary; locale: Locale; projects: Project[] }) {
   const featured = projects.filter((p) => p.featured);
   const others = projects.filter((p) => !p.featured);
 
   return (
-    <section aria-labelledby="projetos" className="scroll-mt-20 border-t border-border py-20 sm:py-28">
-      <div className={container}>
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <SectionTitle id="projetos">{t.projects.title}</SectionTitle>
-          <p className="max-w-md text-muted">{t.projects.subtitle}</p>
-        </div>
+    <NightSection id="projetos" labelledBy="projetos-titulo" scene={{ x: 0.62, scale: 0.42 }}>
+      <SectionHeader id="projetos-titulo" title={t.projects.title} subtitle={t.projects.subtitle} />
 
-        {projects.length === 0 && <p className="mt-12 text-lg text-muted">{t.projects.empty}</p>}
+      {projects.length === 0 && <p className="text-lg text-muted">{t.projects.empty}</p>}
 
-        <div className="mt-14 flex flex-col gap-20">
-          {featured.map((project, idx) => {
-            const caseHref = localePath(locale, `/projetos/${project.slug}`);
-            return (
-              <article key={project.slug} className="grid gap-8 lg:grid-cols-12 lg:items-center">
-                <Link
-                  href={caseHref}
-                  className={`block lg:col-span-7 ${idx % 2 === 1 ? 'lg:order-2' : ''}`}
-                  tabIndex={-1}
-                  aria-hidden="true"
-                >
-                  <ProjectCover project={project} priority={idx === 0} />
-                </Link>
-                <div className={`lg:col-span-5 ${idx % 2 === 1 ? 'lg:order-1' : ''}`}>
-                  <p className="text-sm text-muted">
-                    {[project.category, project.year].filter(Boolean).join(', ')}
-                  </p>
-                  <h3 className="mt-2 font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-                    <Link href={caseHref} className="hover:text-accent-text">
-                      {project.title}
+      <div className="flex flex-col gap-8">
+        {featured.map((project, idx) => {
+          const caseHref = localePath(locale, `/projetos/${project.slug}`);
+          return (
+            <article key={project.slug} data-reveal className="glow-card grid gap-8 p-4 sm:p-6 lg:grid-cols-12 lg:items-center lg:gap-10">
+              <Link
+                href={caseHref}
+                className={`block lg:col-span-7 ${idx % 2 === 1 ? 'lg:order-2' : ''}`}
+                tabIndex={-1}
+                aria-hidden="true"
+              >
+                <ProjectCover project={project} priority={idx === 0} />
+              </Link>
+              <div className={`px-2 pb-2 lg:col-span-5 lg:px-0 lg:pb-0 ${idx % 2 === 1 ? 'lg:order-1' : ''}`}>
+                <p className="text-sm text-accent-text">{[project.category, project.year].filter(Boolean).join(', ')}</p>
+                <h3 className="mt-2 font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+                  <Link href={caseHref} className="transition-colors hover:text-accent-text">
+                    {project.title}
+                  </Link>
+                </h3>
+                <p className="mt-4 text-lg leading-relaxed text-muted">{project.summary}</p>
+                <div className="mt-5">
+                  <Chips items={project.technologies} />
+                </div>
+                <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 font-medium">
+                  {project.body && (
+                    <Link href={caseHref} className="text-accent-text underline decoration-2 underline-offset-4">
+                      {t.projects.viewCase}
                     </Link>
-                  </h3>
-                  <p className="mt-4 text-lg leading-relaxed text-muted">{project.summary}</p>
-                  <p className="mt-5 text-sm">{project.technologies.join(', ')}</p>
-                  <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 font-medium">
-                    {project.body && (
-                      <Link href={caseHref} className="underline decoration-accent decoration-2 underline-offset-4">
-                        {t.projects.viewCase}
-                      </Link>
-                    )}
-                    <ProjectLinks project={project} t={t} />
-                  </div>
+                  )}
+                  <ProjectLinks project={project} t={t} />
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+
+      {others.length > 0 && (
+        <div className="mt-20">
+          <h3 data-reveal className="font-display text-2xl font-semibold">
+            {t.projects.more}
+          </h3>
+          <div className="mt-8 grid gap-6 md:grid-cols-2">
+            {others.map((project, i) => (
+              <article key={project.slug} data-reveal style={reveal((i % 2) * 120)} className="glow-card flex flex-col p-6 sm:p-7">
+                <p className="text-sm text-accent-text">{project.category}</p>
+                <h4 className="mt-2 font-display text-xl font-semibold">
+                  <Link href={localePath(locale, `/projetos/${project.slug}`)} className="transition-colors hover:text-accent-text">
+                    {project.title}
+                  </Link>
+                </h4>
+                <p className="mt-3 flex-1 leading-relaxed text-muted">{project.summary}</p>
+                <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-sm font-medium">
+                  <Link href={localePath(locale, `/projetos/${project.slug}`)} className="text-accent-text underline underline-offset-4">
+                    {t.projects.viewCase}
+                  </Link>
+                  <ProjectLinks project={project} t={t} />
                 </div>
               </article>
-            );
-          })}
-        </div>
-
-        {others.length > 0 && (
-          <div className="mt-24">
-            <h3 className="font-display text-xl font-semibold">{t.projects.more}</h3>
-            <ul className="mt-6 divide-y divide-border border-y border-border">
-              {others.map((project) => (
-                <li key={project.slug} className="grid gap-2 py-6 md:grid-cols-12 md:gap-6">
-                  <div className="md:col-span-4">
-                    <Link
-                      href={localePath(locale, `/projetos/${project.slug}`)}
-                      className="font-display text-xl font-semibold hover:text-accent-text"
-                    >
-                      {project.title}
-                    </Link>
-                    <p className="mt-1 text-sm text-muted">{project.category}</p>
-                  </div>
-                  <p className="text-muted md:col-span-6">{project.summary}</p>
-                  <div className="flex gap-4 text-sm font-medium md:col-span-2 md:justify-end">
-                    <ProjectLinks project={project} t={t} />
-                  </div>
-                </li>
-              ))}
-            </ul>
+            ))}
           </div>
-        )}
-      </div>
-    </section>
+        </div>
+      )}
+    </NightSection>
   );
 }
 
 function About({ t }: { t: Dictionary }) {
   return (
-    <section aria-labelledby="sobre" className="bg-ink py-20 text-ink-fg sm:py-28">
-      <div className={`${container} grid gap-10 md:grid-cols-12`}>
-        <h2 id="sobre" className="font-display text-3xl font-bold tracking-tight md:col-span-3">
-          {t.about.title}
-        </h2>
-        <div className="flex max-w-3xl flex-col gap-6 text-xl leading-relaxed md:col-span-9 sm:text-2xl">
-          {t.about.paragraphs.map((p, i) => (
-            <p key={i} className={i === 0 ? '' : 'text-ink-muted'}>
-              {p}
-            </p>
-          ))}
+    <NightSection id="sobre" labelledBy="sobre-titulo" scene={{ x: -0.62, scale: 0.45 }}>
+      <div className="grid gap-10 md:grid-cols-12">
+        <div className="md:col-span-4">
+          <RevealTitle id="sobre-titulo" text={t.about.title} className="night-gradient font-display text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl" />
+        </div>
+        <div data-reveal className="glow-card p-7 sm:p-10 md:col-span-8">
+          <div className="flex flex-col gap-6 text-lg leading-relaxed sm:text-xl">
+            {t.about.paragraphs.map((p, i) => (
+              <p key={i} className={i === 0 ? 'text-foreground' : 'text-muted'}>
+                {p}
+              </p>
+            ))}
+          </div>
         </div>
       </div>
-    </section>
+    </NightSection>
   );
 }
 
 function Services({ t }: { t: Dictionary }) {
   return (
-    <section aria-labelledby="servicos" className="scroll-mt-20 py-20 sm:py-28">
-      <div className={container}>
-        <SectionTitle id="servicos">{t.services.title}</SectionTitle>
-        <div className="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-2">
-          {t.services.items.map((s) => (
-            <div key={s.title} className="border-t-2 border-foreground pt-5">
-              <h3 className="font-display text-2xl font-semibold tracking-tight">{s.title}</h3>
-              <p className="mt-3 max-w-md text-lg leading-relaxed text-muted">{s.description}</p>
-            </div>
-          ))}
-        </div>
+    <NightSection id="servicos" labelledBy="servicos-titulo" scene={{ x: 0.62, scale: 0.4 }}>
+      <SectionHeader id="servicos-titulo" title={t.services.title} />
+      <div className="grid gap-6 sm:grid-cols-2">
+        {t.services.items.map((s, i) => (
+          <div key={s.title} data-reveal style={reveal((i % 2) * 120)} className="glow-card p-7 sm:p-8">
+            <span className="block h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_14px_var(--glow)]" aria-hidden="true" />
+            <h3 className="mt-5 font-display text-2xl font-semibold tracking-tight">{s.title}</h3>
+            <p className="mt-3 text-lg leading-relaxed text-muted">{s.description}</p>
+          </div>
+        ))}
       </div>
-    </section>
+    </NightSection>
   );
 }
 
@@ -221,83 +277,85 @@ function Career({
   ].filter((g) => g.items.length > 0);
 
   return (
-    <section aria-labelledby="trajetoria" className="scroll-mt-20 border-t border-border py-20 sm:py-28">
-      <div className={container}>
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <SectionTitle id="trajetoria">{t.experience.title}</SectionTitle>
-          {cvUrl && (
+    <NightSection id="trajetoria" labelledBy="trajetoria-titulo" scene={{ x: -0.62, scale: 0.4 }}>
+      <SectionHeader
+        id="trajetoria-titulo"
+        title={t.experience.title}
+        aside={
+          cvUrl && (
             <TrackedLink
               event="cv_download"
               href={cvUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-medium underline decoration-accent decoration-2 underline-offset-4"
+              className="inline-flex w-max items-center rounded-full bg-accent px-6 py-3 font-medium text-accent-fg shadow-[0_10px_30px_-12px_var(--glow)] transition-opacity hover:opacity-90"
             >
               {t.experience.downloadCv}
             </TrackedLink>
-          )}
-        </div>
-        <div className="mt-12 grid gap-14 lg:grid-cols-2">
-          {groups.map((group) => (
-            <div key={group.label}>
-              <h3 className="text-sm font-semibold text-muted">{group.label}</h3>
-              <ol className="mt-4 border-l border-border">
-                {group.items.map((e) => (
-                  <li key={e.id} className="relative pb-8 pl-6 last:pb-0">
-                    <span className="absolute -left-[5px] top-2 h-2.5 w-2.5 rounded-full bg-accent" aria-hidden="true" />
-                    <p className="text-sm text-muted">{formatPeriod(e, locale, t.experience.present)}</p>
-                    <p className="mt-1 font-display text-xl font-semibold">{e.title}</p>
-                    <p className="text-muted">{e.organization}</p>
-                    {e.description && <p className="mt-2 leading-relaxed">{e.description}</p>}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          ))}
-        </div>
+          )
+        }
+      />
+      <div className="grid gap-6 lg:grid-cols-2">
+        {groups.map((group, gi) => (
+          <div key={group.label} data-reveal style={reveal(gi * 120)} className="glow-card p-7 sm:p-8">
+            <h3 className="text-sm font-semibold text-accent-text">{group.label}</h3>
+            <ol className="mt-5 border-l border-border">
+              {group.items.map((e) => (
+                <li key={e.id} className="relative pb-8 pl-6 last:pb-0">
+                  <span className="absolute -left-[5px] top-2 h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_12px_var(--glow)]" aria-hidden="true" />
+                  <p className="text-sm text-muted">{formatPeriod(e, locale, t.experience.present)}</p>
+                  <p className="mt-1 font-display text-xl font-semibold">{e.title}</p>
+                  <p className="text-muted">{e.organization}</p>
+                  {e.description && <p className="mt-2 leading-relaxed">{e.description}</p>}
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))}
       </div>
-    </section>
+    </NightSection>
   );
 }
 
 function Stack({ t }: { t: Dictionary }) {
   return (
-    <section aria-labelledby="ferramentas" className="border-t border-border py-20 sm:py-28">
-      <div className={`${container} grid gap-10 md:grid-cols-12`}>
-        <div className="md:col-span-4">
-          <SectionTitle id="ferramentas">{t.stack.title}</SectionTitle>
-        </div>
-        <dl className="divide-y divide-border md:col-span-8">
-          {t.stack.groups.map((g) => (
-            <div key={g.label} className="grid gap-2 py-5 sm:grid-cols-3">
-              <dt className="font-semibold">{g.label}</dt>
-              <dd className="text-muted sm:col-span-2">{g.items.join(', ')}</dd>
+    <NightSection id="ferramentas" labelledBy="ferramentas-titulo" scene={{ x: 0.62, scale: 0.38 }}>
+      <SectionHeader id="ferramentas-titulo" title={t.stack.title} />
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {t.stack.groups.map((g, i) => (
+          <div
+            key={g.label}
+            data-reveal
+            style={reveal((i % 3) * 110)}
+            className={`glow-card p-7 ${i === 0 ? 'lg:col-span-2' : ''}`}
+          >
+            <h3 className="font-display text-xl font-semibold">{g.label}</h3>
+            <div className="mt-5">
+              <Chips items={g.items} />
             </div>
-          ))}
-        </dl>
+          </div>
+        ))}
       </div>
-    </section>
+    </NightSection>
   );
 }
 
 function Approach({ t }: { t: Dictionary }) {
   return (
-    <section aria-labelledby="metodo" className="bg-surface-2 py-20 sm:py-28">
-      <div className={container}>
-        <SectionTitle id="metodo">{t.approach.title}</SectionTitle>
-        <ol className="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          {t.approach.items.map((item, i) => (
-            <li key={item.title}>
-              <span className="font-display text-5xl font-bold text-accent-text" aria-hidden="true">
-                {i + 1}
-              </span>
-              <h3 className="mt-3 text-lg font-semibold">{item.title}</h3>
-              <p className="mt-2 leading-relaxed text-muted">{item.description}</p>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
+    <NightSection id="metodo" labelledBy="metodo-titulo" scene={{ x: -0.62, scale: 0.38 }}>
+      <SectionHeader id="metodo-titulo" title={t.approach.title} />
+      <ol className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {t.approach.items.map((item, i) => (
+          <li key={item.title} data-reveal style={reveal(i * 110)} className="glow-card p-7">
+            <span className="night-gradient font-display text-5xl font-bold" aria-hidden="true">
+              {i + 1}
+            </span>
+            <h3 className="mt-4 text-lg font-semibold">{item.title}</h3>
+            <p className="mt-2 leading-relaxed text-muted">{item.description}</p>
+          </li>
+        ))}
+      </ol>
+    </NightSection>
   );
 }
 
@@ -305,12 +363,14 @@ function Contact({ t, settings }: { t: Dictionary; settings: PublicSettings }) {
   const wa = settings.whatsappNumber ? whatsappLink(settings.whatsappNumber, t.contact.whatsappMessage) : null;
 
   return (
-    <section aria-labelledby="contato" className="scroll-mt-20 py-20 sm:py-28">
-      <div className={`${container} grid gap-14 lg:grid-cols-12`}>
-        <div className="lg:col-span-5">
-          <h2 id="contato" className="font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl">
-            {t.contact.title}
-          </h2>
+    <NightSection id="contato" labelledBy="contato-titulo" scene={{ x: 0.62, y: 0.55, scale: 0.35 }}>
+      <div className="grid gap-6 lg:grid-cols-12">
+        <div data-reveal className="glow-card p-7 sm:p-9 lg:col-span-5">
+          <RevealTitle
+            id="contato-titulo"
+            text={t.contact.title}
+            className="night-gradient font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-5xl"
+          />
           <p className="mt-5 text-lg leading-relaxed text-muted">{t.contact.subtitle}</p>
           {wa && (
             <TrackedLink
@@ -318,7 +378,7 @@ function Contact({ t, settings }: { t: Dictionary; settings: PublicSettings }) {
               href={wa}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-8 inline-flex items-center gap-3 rounded-full bg-accent px-7 py-3.5 font-medium text-accent-fg transition-opacity hover:opacity-90"
+              className="mt-8 inline-flex items-center gap-3 rounded-full bg-accent px-7 py-3.5 font-medium text-accent-fg shadow-[0_10px_30px_-12px_var(--glow)] transition-opacity hover:opacity-90"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .3-3.4-.7-2.9-1.2-4.7-4.1-4.9-4.3-.1-.2-1.2-1.6-1.2-3s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.9 2.1c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l2 1c.3.1.5.2.5.3.1.2.1.7-.1 1.3z" />
@@ -330,28 +390,28 @@ function Contact({ t, settings }: { t: Dictionary; settings: PublicSettings }) {
             <p className="text-sm font-semibold text-muted">{t.contact.channels}</p>
             <ul className="mt-3 flex flex-col gap-2 text-lg">
               <li>
-                <TrackedLink event="email" href={`mailto:${CONTACT.email}`} className="underline decoration-border underline-offset-4 hover:decoration-foreground">
+                <TrackedLink event="email" href={`mailto:${CONTACT.email}`} className="underline decoration-border underline-offset-4 hover:decoration-accent-text">
                   {CONTACT.email}
                 </TrackedLink>
               </li>
               <li>
-                <TrackedLink event="linkedin" href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer" className="underline decoration-border underline-offset-4 hover:decoration-foreground">
+                <TrackedLink event="linkedin" href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer" className="underline decoration-border underline-offset-4 hover:decoration-accent-text">
                   LinkedIn
                 </TrackedLink>
               </li>
               <li>
-                <TrackedLink event="github" href={CONTACT.github} target="_blank" rel="noopener noreferrer" className="underline decoration-border underline-offset-4 hover:decoration-foreground">
+                <TrackedLink event="github" href={CONTACT.github} target="_blank" rel="noopener noreferrer" className="underline decoration-border underline-offset-4 hover:decoration-accent-text">
                   GitHub
                 </TrackedLink>
               </li>
             </ul>
           </div>
         </div>
-        <div className="lg:col-span-7">
+        <div data-reveal style={reveal(150)} className="glow-card p-7 sm:p-9 lg:col-span-7">
           <p className="mb-6 text-sm font-semibold text-muted">{t.contact.or}</p>
           <ContactForm t={t.contact.form} />
         </div>
       </div>
-    </section>
+    </NightSection>
   );
 }
