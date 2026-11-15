@@ -36,10 +36,9 @@ export const getPublishedProjectRows = cache(async (): Promise<ProjectRow[]> => 
     .eq('published', true)
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: false });
-  if (error) {
-    console.error('[data] projects', error.message);
-    return [];
-  }
+  // Throwing (instead of returning []) makes ISR keep serving the last good page
+  // when the database is briefly unreachable, rather than caching an empty list or a 404.
+  if (error) throw new Error(`[data] projects: ${error.message}`);
   return data as ProjectRow[];
 });
 
@@ -61,10 +60,7 @@ export async function getExperiences(locale: Locale): Promise<Experience[]> {
     .select('*')
     .eq('published', true)
     .order('start_date', { ascending: false });
-  if (error) {
-    console.error('[data] experiences', error.message);
-    return [];
-  }
+  if (error) throw new Error(`[data] experiences: ${error.message}`);
   const en = locale === 'en';
   return (data as ExperienceRow[]).map((row) => ({
     id: row.id,
