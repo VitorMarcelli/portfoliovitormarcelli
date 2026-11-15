@@ -6,7 +6,7 @@ import type { Locale } from '@/lib/types';
 export default function SiteFooter({ t }: { locale: Locale; t: Dictionary }) {
   return (
     <footer className="border-t border-border">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 text-sm text-muted sm:px-6 md:flex-row md:items-center md:justify-between">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-36 pt-10 text-sm text-muted sm:px-6 md:flex-row md:items-center md:justify-between">
         <p>
           © {new Date().getFullYear()} Vitor Marcelli. {t.footer.rights}
         </p>

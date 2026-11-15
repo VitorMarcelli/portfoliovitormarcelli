@@ -49,7 +49,9 @@ export default function WelcomeLoader({ locale }: WelcomeLoaderProps) {
   }, []);
 
   useEffect(() => {
-    if (done) document.documentElement.style.overflow = '';
+    if (!done) return;
+    document.documentElement.style.overflow = '';
+    window.dispatchEvent(new Event('welcome:done'));
   }, [done]);
 
   if (done) return null;

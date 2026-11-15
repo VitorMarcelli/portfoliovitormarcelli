@@ -144,6 +144,15 @@ const pt = {
     },
     channels: 'Outros canais',
   },
+  dock: {
+    toolbar: 'Atalhos',
+    home: 'Início',
+    github: 'GitHub',
+    linkedin: 'LinkedIn',
+    whatsapp: 'WhatsApp',
+    email: 'E-mail',
+    theme: 'Tema',
+  },
   footer: {
     rights: 'Todos os direitos reservados.',
     admin: 'Área restrita',
@@ -286,6 +295,15 @@ const en: Dictionary = {
       invalid: 'Fill in your name, a valid email and a message of at least 10 characters.',
     },
     channels: 'Other channels',
+  },
+  dock: {
+    toolbar: 'Shortcuts',
+    home: 'Home',
+    github: 'GitHub',
+    linkedin: 'LinkedIn',
+    whatsapp: 'WhatsApp',
+    email: 'Email',
+    theme: 'Theme',
   },
   footer: {
     rights: 'All rights reserved.',
