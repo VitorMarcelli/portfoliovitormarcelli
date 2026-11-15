@@ -50,7 +50,7 @@ function Hero({ t, settings }: { t: Dictionary; settings: PublicSettings }) {
   const wa = settings.whatsappNumber ? whatsappLink(settings.whatsappNumber, t.contact.whatsappMessage) : null;
 
   return (
-    <section className={`${container} flex min-h-[calc(100svh-4rem)] flex-col justify-end pb-14 pt-16 sm:pb-20`}>
+    <section className={`${container} flex min-h-[72svh] flex-col justify-end pb-14 pt-12 sm:min-h-[calc(100svh-4rem)] sm:pb-20 sm:pt-16`}>
       <p className="rise flex items-center gap-2.5 text-sm text-muted" style={{ '--delay': '0ms' } as React.CSSProperties}>
         <span
           className={`h-2 w-2 rounded-full ${settings.available ? 'bg-success' : 'bg-muted'}`}

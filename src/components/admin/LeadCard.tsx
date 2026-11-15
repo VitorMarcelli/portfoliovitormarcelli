@@ -4,15 +4,8 @@ import { useState, useTransition } from 'react';
 import { deleteLead, updateLeadNotes, updateLeadStatus } from '@/actions/admin/leads';
 import type { LeadRow, LeadStatus } from '@/lib/types';
 import { formatPhone, whatsappLink } from '@/lib/whatsapp/link';
+import { STATUS_LABELS } from '@/lib/labels';
 import { inputClass, timeAgo } from './ui';
-
-export const STATUS_LABELS: Record<LeadStatus, string> = {
-  novo: 'Novo',
-  em_contato: 'Em contato',
-  proposta: 'Proposta enviada',
-  fechado: 'Fechado',
-  perdido: 'Perdido',
-};
 
 export default function LeadCard({ lead }: { lead: LeadRow }) {
   const [pending, startTransition] = useTransition();

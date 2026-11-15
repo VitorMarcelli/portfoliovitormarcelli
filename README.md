@@ -1,174 +1,61 @@
 # Portfólio Profissional | Vitor Marcelli
 
-Portfólio profissional desenvolvido para apresentar minha trajetória, habilidades técnicas, projetos, experiências e soluções digitais como Desenvolvedor Full Stack.
+Portfólio e central de atendimento de Vitor Marcelli, Desenvolvedor Full Stack.
 
-O objetivo deste projeto é centralizar minha presença profissional em uma página moderna, responsiva e acessível, facilitando a apresentação do meu trabalho para clientes, empresas, recrutadores e parceiros de tecnologia.
-
-## Projeto online
-
-Acesse o portfólio publicado:
-
-https://vitormarcelli.github.io/portfoliovitormarcelli/
-
-## Sobre o projeto
-
-Este portfólio foi criado para representar minha atuação como desenvolvedor, reunindo informações relevantes sobre minha experiência, principais tecnologias, projetos desenvolvidos e canais de contato.
-
-A proposta é ir além de uma página estática simples. O projeto foi construído com foco em performance, organização, responsividade, identidade visual moderna e facilidade de manutenção.
-
-Ele também serve como uma vitrine técnica, demonstrando conhecimentos em desenvolvimento frontend moderno, estruturação de aplicações com Next.js, componentização, estilização com Tailwind CSS e publicação automatizada com GitHub Actions.
-
-## Objetivos do portfólio
-
-- Apresentar minha trajetória profissional de forma clara e objetiva.
-- Reunir projetos, experiências e habilidades técnicas em um único lugar.
-- Facilitar o contato com empresas, clientes e recrutadores.
-- Demonstrar domínio em tecnologias modernas de desenvolvimento web.
-- Criar uma base escalável para evolução contínua do meu posicionamento profissional.
-
-## Tecnologias utilizadas
-
-O projeto foi desenvolvido utilizando tecnologias modernas do ecossistema web:
-
-- Next.js
-- TypeScript
-- Tailwind CSS
-- Framer Motion
-- React
-- GitHub Pages
-- GitHub Actions
+Além de apresentar trajetória, serviços e projetos, o site concentra o contato com possíveis clientes: formulário, WhatsApp com atendimento por IA e um painel privado para acompanhar visitas, leads e conversas.
 
 ## Funcionalidades
 
-- Página profissional responsiva.
-- Seção de apresentação pessoal.
-- Seção de tecnologias e habilidades.
-- Seção de projetos.
-- Links para contato profissional.
-- Integração com GitHub e LinkedIn.
-- Layout moderno e adaptável.
-- Deploy automatizado via GitHub Actions.
-- Publicação gratuita via GitHub Pages.
-- Estrutura preparada para evolução futura.
+**Site público (PT em `/`, EN em `/en`)**
 
-## Diferenciais técnicos
+- Projetos, trajetória e currículo gerenciados pelo painel, com página de case para cada projeto.
+- Formulário de contato que vira lead no painel.
+- Botão de WhatsApp, e-mail, LinkedIn e GitHub.
+- SEO: metadados por idioma, `hreflang`, sitemap, robots, imagem Open Graph e dados estruturados.
+- Tema claro e escuro, sem flash na troca, e respeito a `prefers-reduced-motion`.
+- Métricas de visita próprias, sem cookies.
 
-Este projeto foi estruturado considerando boas práticas importantes para aplicações frontend modernas:
+**Painel (`/admin`)**
 
-- Componentização organizada.
-- Uso de TypeScript para maior segurança no desenvolvimento.
-- Estilização com Tailwind CSS.
-- Animações com Framer Motion.
-- Exportação estática compatível com GitHub Pages.
-- Configuração de `basePath` para funcionamento correto em subdiretório.
-- Pipeline de deploy automatizado.
-- SEO básico configurado.
-- README preparado como vitrine técnica do projeto.
+- Visão geral: visualizações, visitantes, origem do tráfego, páginas, países, dispositivos e cliques.
+- Conversas do WhatsApp em tempo real: a IA atende, qualifica e transfere para mim; posso assumir ou devolver qualquer conversa.
+- Funil de leads (novo, em contato, proposta, fechado, perdido) com anotações.
+- Cadastro de projetos com upload de capa, tradução e publicação.
+- Trajetória profissional, currículo em PDF e configurações do atendimento.
 
-## Estrutura do projeto
+## Tecnologias
 
-```txt
-portfoliovitormarcelli/
-├── .github/
-│   └── workflows/
-│       └── deploy.yml
-├── public/
-│   └── projects/
-├── src/
-│   ├── app/
-│   ├── components/
-│   ├── sections/
-│   └── ...
-├── next.config.ts
-├── package.json
-├── tsconfig.json
-└── README.md
-```
+- Next.js 16 (App Router, Server Actions, Proxy), React 19 e TypeScript
+- Tailwind CSS 4
+- Supabase (PostgreSQL, Auth, Storage e Realtime)
+- Claude API (atendimento com IA)
+- Evolution API (WhatsApp)
+- Vercel
 
 ## Como rodar localmente
 
-Clone o repositório:
-
 ```bash
 git clone https://github.com/VitorMarcelli/portfoliovitormarcelli.git
-```
-
-Acesse a pasta do projeto:
-
-```bash
 cd portfoliovitormarcelli
-```
-
-Instale as dependências:
-
-```bash
 npm install
-```
-
-Execute o servidor de desenvolvimento:
-
-```bash
+cp .env.example .env.local   # preencha as variáveis
 npm run dev
 ```
 
-Depois acesse no navegador:
+Acesse `http://localhost:3000`.
 
-```txt
-http://localhost:3000
-```
-
-## Como gerar o build
-
-Para gerar a versão de produção:
-
-```bash
-npm run build
-```
-
-O projeto está configurado para exportação estática, gerando os arquivos necessários para publicação no GitHub Pages.
+O banco é criado executando os arquivos de `supabase/migrations` em ordem no SQL Editor do Supabase.
 
 ## Deploy
 
-O deploy é feito automaticamente via GitHub Actions.
+O deploy é feito pela Vercel a cada push na branch `main`. As variáveis de ambiente necessárias estão listadas em `.env.example`.
 
-Sempre que houver um push para a branch `main`, o workflow localizado em:
+## Contato
 
-```txt
-.github/workflows/deploy.yml
-```
-
-executa o processo de build e publica o resultado no GitHub Pages.
-
-URL de produção:
-
-```txt
-https://vitormarcelli.github.io/portfoliovitormarcelli/
-```
-
-## Autor
-
-Desenvolvido por Vitor Marcelli.
-
-Sou Desenvolvedor Full Stack com experiência em desenvolvimento de sistemas web, automações, integrações com APIs, soluções com IA, WordPress, React, Next.js, Python, backend, frontend e DevOps.
-
-Tenho foco em criar soluções digitais úteis, escaláveis e alinhadas às necessidades reais de clientes e empresas.
-
-## Contato profissional
-
-LinkedIn:
-
-https://www.linkedin.com/in/vitor-augusto-marcelli-ba4070220/
-
-GitHub:
-
-https://github.com/VitorMarcelli
-
-Portfólio:
-
-https://vitormarcelli.github.io/portfoliovitormarcelli/
+- LinkedIn: https://www.linkedin.com/in/vitor-augusto-marcelli-ba4070220/
+- GitHub: https://github.com/VitorMarcelli
+- E-mail: tecnologybluelife@gmail.com
 
 ## Licença
 
-Este projeto está licenciado sob a licença MIT.
-
-Consulte o arquivo `LICENSE` para mais detalhes.
+MIT. Consulte o arquivo `LICENSE`.

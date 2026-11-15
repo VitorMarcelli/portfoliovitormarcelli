@@ -19,6 +19,7 @@
   --success: #1d7a4f;
   --danger: #b42318;
   --focus: #2f5bd3;
+  --chart: #c27c12; /* validated vs #ffffff (light) and #16243a (dark) */
   color-scheme: light;
 }
 
@@ -39,6 +40,7 @@
   --success: #4cc38a;
   --danger: #f97066;
   --focus: #8fb0ff;
+  --chart: #c27c12;
   color-scheme: dark;
 }
 
@@ -57,6 +59,7 @@
   --color-ink-muted: var(--ink-muted);
   --color-success: var(--success);
   --color-danger: var(--danger);
+  --color-chart: var(--chart);
   --font-sans: var(--font-body), system-ui, sans-serif;
   --font-display: var(--font-display), var(--font-body), system-ui, sans-serif;
 }

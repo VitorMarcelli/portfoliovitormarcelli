@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
 interface ThemeToggleProps {
   toLightLabel: string;
@@ -8,22 +8,26 @@ interface ThemeToggleProps {
   className?: string;
 }
 
-export default function ThemeToggle({ toLightLabel, toDarkLabel, className = '' }: ThemeToggleProps) {
-  const [dark, setDark] = useState<boolean | null>(null);
+function subscribe(onChange: () => void) {
+  const observer = new MutationObserver(onChange);
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  return () => observer.disconnect();
+}
 
-  useEffect(() => {
-    setDark(document.documentElement.classList.contains('dark'));
-  }, []);
+const isDark = () => document.documentElement.classList.contains('dark');
+const serverSnapshot = () => null;
+
+export default function ThemeToggle({ toLightLabel, toDarkLabel, className = '' }: ThemeToggleProps) {
+  const dark = useSyncExternalStore(subscribe, isDark, serverSnapshot);
 
   function toggle() {
-    const next = !document.documentElement.classList.contains('dark');
+    const next = !isDark();
     document.documentElement.classList.toggle('dark', next);
     try {
       localStorage.setItem('theme', next ? 'dark' : 'light');
     } catch {
       // storage unavailable: the choice lasts for this page view only
     }
-    setDark(next);
   }
 
   const label = dark ? toLightLabel : toDarkLabel;

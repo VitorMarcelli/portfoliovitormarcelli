@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import LeadCard, { STATUS_LABELS } from '@/components/admin/LeadCard';
+import LeadCard from '@/components/admin/LeadCard';
+import { STATUS_LABELS } from '@/lib/labels';
 import { EmptyState, PageHeader } from '@/components/admin/ui';
 import { requireAdmin } from '@/lib/auth';
 import type { LeadRow, LeadStatus } from '@/lib/types';

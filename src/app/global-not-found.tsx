@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import './globals.css';
 import { fontVariables } from './fonts';
 import ThemeScript from '@/components/ThemeScript';
@@ -19,9 +20,9 @@ export default function GlobalNotFound() {
           <p className="font-display text-[clamp(5rem,20vw,12rem)] font-extrabold leading-none tracking-tighter text-accent-text">404</p>
           <h1 className="mt-4 font-display text-3xl font-bold">Página não encontrada</h1>
           <p className="mt-2 text-muted">Page not found.</p>
-          <a href="/" className="mt-8 inline-flex rounded-full bg-foreground px-6 py-3 font-medium text-background">
+          <Link href="/" className="mt-8 inline-flex rounded-full bg-foreground px-6 py-3 font-medium text-background">
             Voltar ao início
-          </a>
+          </Link>
         </main>
       </body>
     </html>
