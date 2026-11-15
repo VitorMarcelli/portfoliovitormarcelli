@@ -161,41 +161,54 @@
   filter: blur(0);
 }
 
-/* Greeting swap between languages: letters leave upwards one by one, the next word enters like the first. */
-.title[data-phase='in'] .letter {
+.entered .letter {
   opacity: 1;
   transform: translateY(0);
 }
 
-.title[data-phase='out'] .letter {
-  opacity: 0;
-  transform: translateY(-1rem);
-  transition-duration: 350ms;
+/*
+ * Language swap: both words share the same spot and cross-dissolve.
+ * The leaving word blurs out while spreading slightly; the arriving word
+ * comes into focus while its letter spacing settles back to the resting value.
+ */
+.stack {
+  display: grid;
+  justify-items: center;
 }
 
-.title[data-phase='pre'] .letter {
-  opacity: 0;
-  transform: translateY(1rem);
-  transition: none;
+.word {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+  transition:
+    opacity 1200ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 1200ms cubic-bezier(0.22, 1, 0.36, 1),
+    letter-spacing 1400ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.subText {
-  display: inline-block;
-  transition: opacity 500ms ease-out, transform 500ms ease-out, filter 500ms ease-out;
+.title .word {
+  letter-spacing: 0.2em;
 }
 
-.subText[data-phase='out'] {
-  opacity: 0;
-  transform: translateY(-0.5rem);
-  filter: blur(4px);
-  transition-duration: 300ms;
+.subtitle .word {
+  letter-spacing: 0.1em;
 }
 
-.subText[data-phase='pre'] {
+.wordAway {
   opacity: 0;
-  transform: translateY(0.5rem);
-  filter: blur(4px);
-  transition: none;
+  filter: blur(14px);
+  pointer-events: none;
+}
+
+.title .wordAway {
+  letter-spacing: 0.3em;
+}
+
+.subtitle .wordAway {
+  letter-spacing: 0.16em;
+}
+
+.wordArriving {
+  transition-delay: 180ms;
 }
 
 @media (min-width: 768px) {
