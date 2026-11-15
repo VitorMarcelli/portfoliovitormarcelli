@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import styles from './WelcomeLoader.module.css';
 
-const DURATION_MS = 3000;
+const DURATION_MS = 4000;
 const TITLE = 'Welcome';
 
 interface WelcomeLoaderProps {
