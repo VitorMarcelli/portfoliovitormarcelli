@@ -56,6 +56,15 @@ interface SceneTarget {
 const DEFAULT_TARGET: SceneTarget = { x: 0.62, y: 0, scale: 0.42 };
 
 function readTarget(): SceneTarget {
+  // While the welcome screen is on, it decides where the sphere is (small, at the center).
+  const intro = document.querySelector<HTMLElement>('.welcome-loader[data-scene-scale]');
+  if (intro) {
+    return {
+      x: Number(intro.dataset.sceneX ?? 0),
+      y: Number(intro.dataset.sceneY ?? 0),
+      scale: Number(intro.dataset.sceneScale ?? 0.3),
+    };
+  }
   const sections = document.querySelectorAll<HTMLElement>('[data-scene-scale]');
   const probe = window.innerHeight * 0.45;
   let current: HTMLElement | null = null;
@@ -91,7 +100,7 @@ function Sculpture({ colors, target }: { colors: Palette; target: React.RefObjec
     const goalY = t.y * (viewport.height / 2) * 0.6;
     const goalScale = t.scale * (narrow ? 0.75 : 1);
     // Frame-rate independent easing toward the section's spot.
-    const k = 1 - Math.exp(-delta * 2.6);
+    const k = 1 - Math.exp(-delta * 2.2);
     holder.position.x += (goalX - holder.position.x) * k;
     holder.position.y += (goalY - holder.position.y) * k;
     const s = holder.scale.x + (goalScale - holder.scale.x) * k;
@@ -99,7 +108,7 @@ function Sculpture({ colors, target }: { colors: Palette; target: React.RefObjec
   });
 
   return (
-    <group ref={holderRef}>
+    <group ref={holderRef} scale={0.05}>
       <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
         <Sphere ref={meshRef} args={[1.5, 100, 100]} scale={1.5}>
           <MeshDistortMaterial
@@ -176,6 +185,7 @@ export default function NightScene() {
   const pathname = usePathname();
   const target = useRef<SceneTarget>(DEFAULT_TARGET);
   const [eventSource, setEventSource] = useState<HTMLElement | undefined>(undefined);
+  const [shown, setShown] = useState(false);
 
   useEffect(() => {
     // Track the pointer over the whole page (the canvas itself ignores pointer events).
@@ -194,10 +204,15 @@ export default function NightScene() {
     update();
     window.addEventListener('scroll', update, { passive: true });
     window.addEventListener('resize', update);
+    // The welcome screen leaving (or switching phase) moves the sphere too.
+    window.addEventListener('welcome:done', update);
+    window.addEventListener('welcome:phase', update);
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener('scroll', update);
       window.removeEventListener('resize', update);
+      window.removeEventListener('welcome:done', update);
+      window.removeEventListener('welcome:phase', update);
     };
   }, [pathname]);
 
@@ -205,8 +220,12 @@ export default function NightScene() {
   const colors = isDark ? PALETTE.dark : PALETTE.light;
 
   return (
-    <div className="pointer-events-none fixed inset-0 -z-10 h-screen w-full" aria-hidden="true">
+    <div
+      className={`pointer-events-none fixed inset-0 -z-10 h-screen w-full transition-opacity duration-[1600ms] ease-out ${shown ? 'opacity-100' : 'opacity-0'}`}
+      aria-hidden="true"
+    >
       <Canvas
+        onCreated={() => requestAnimationFrame(() => setShown(true))}
         camera={{ position: [0, 0, 5], fov: 75 }}
         gl={{ antialias: true, alpha: true }}
         dpr={[1, 1.75]}

@@ -1,16 +1,17 @@
-/* Full-screen welcome screen shown on the home page for 4s after hydration. */
+/*
+ * Welcome screen in the hero's style: no background of its own, it floats over the site's
+ * 3D night (the sphere is kept small at the center by NightScene while this screen is on).
+ * Previous design (orbs and beams) is in the git tag `backup/abertura-orbes`.
+ */
 
 .root {
-  --wl-bg: #f1f5f9;
-  --wl-orb: #f0f4ff;
-  --wl-orb-border: rgba(99, 102, 241, 0.4);
-  --wl-orb-glow-1: rgba(99, 102, 241, 0.3);
-  --wl-orb-glow-2: rgba(99, 102, 241, 0.15);
-  --wl-orb-inset: rgba(99, 102, 241, 0.08);
-  --wl-title: #312e81;
-  --wl-subtitle: rgba(79, 70, 229, 0.6);
-  --wl-beam: linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.5) 30%, rgba(129, 140, 248, 0.9) 70%, rgba(99, 102, 241, 1) 100%);
-  --wl-beam-glow: 0 0 20px 4px rgba(99, 102, 241, 0.6), 0 0 40px 8px rgba(129, 140, 248, 0.3);
+  --wl-from: #4f46e5;
+  --wl-to: #818cf8;
+  --wl-sub: rgba(49, 46, 129, 0.6);
+  --wl-muted: rgba(49, 46, 129, 0.55);
+  --wl-strong: #312e81;
+  --wl-line: rgba(99, 102, 241, 0.3);
+  --wl-glow: rgba(99, 102, 241, 0.45);
 
   position: fixed;
   inset: 0;
@@ -18,189 +19,120 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
-  background: var(--wl-bg);
-  transition: background-color 0.5s;
-  font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  pointer-events: none;
   /* Failsafe: never block the site if the script that removes the screen does not run. */
   animation: wl-failsafe 0s linear 8s forwards;
 }
 
 :global(.dark) .root {
-  --wl-bg: #050a18;
-  --wl-orb: #050a18;
-  --wl-orb-border: rgba(100, 180, 255, 0.3);
-  --wl-orb-glow-1: rgba(59, 130, 246, 0.4);
-  --wl-orb-glow-2: rgba(59, 130, 246, 0.2);
-  --wl-orb-inset: rgba(59, 130, 246, 0.1);
-  --wl-title: #ffffff;
-  --wl-subtitle: rgba(255, 255, 255, 0.6);
-  --wl-beam: linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.5) 30%, rgba(150, 200, 255, 0.9) 70%, white 100%);
-  --wl-beam-glow: 0 0 20px 4px rgba(100, 180, 255, 0.8), 0 0 40px 8px rgba(59, 130, 246, 0.4);
+  --wl-from: #3b82f6;
+  --wl-to: #96c8ff;
+  --wl-sub: rgba(255, 255, 255, 0.6);
+  --wl-muted: rgba(255, 255, 255, 0.5);
+  --wl-strong: #ffffff;
+  --wl-line: rgba(100, 180, 255, 0.3);
+  --wl-glow: rgba(59, 130, 246, 0.55);
 }
 
 @keyframes wl-failsafe {
   to {
     visibility: hidden;
-    pointer-events: none;
   }
 }
 
-/* ── Orbs ── */
-.orbSlot {
-  position: absolute;
-  transition: opacity 1000ms ease-out, transform 1000ms ease-out;
-  opacity: 0;
-}
-
-.orbA { top: -40%; left: -20%; width: 80vw; height: 80vw; max-width: 800px; max-height: 800px; transform: translateY(-2.5rem); }
-.orbB { bottom: -50%; left: 50%; width: 100vw; height: 100vw; max-width: 1000px; max-height: 1000px; transform: translateX(-50%) translateY(2.5rem); transition-delay: 300ms; }
-.orbC { top: -30%; right: -25%; width: 70vw; height: 70vw; max-width: 700px; max-height: 700px; transform: translateX(2.5rem); transition-delay: 500ms; }
-.orbD { bottom: -35%; right: -15%; width: 75vw; height: 75vw; max-width: 750px; max-height: 750px; transform: translateY(2.5rem); transition-delay: 700ms; }
-
-.entered .orbSlot { opacity: 1; }
-.entered .orbA { transform: translateY(0); }
-.entered .orbB { transform: translateX(-50%) translateY(0); }
-.entered .orbC { transform: translateX(0); }
-.entered .orbD { transform: translateY(0); }
-
-.orb {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 9999px;
-  background: radial-gradient(circle at 50% 50%, var(--wl-orb) 0%, var(--wl-orb) 90%, transparent 100%);
-  box-shadow: 0 0 60px 2px var(--wl-orb-glow-1), 0 0 100px 5px var(--wl-orb-glow-2), inset 0 0 60px 2px var(--wl-orb-inset);
-  border: 1px solid var(--wl-orb-border);
-  transition: all 0.5s;
-}
-
-/* ── Light beams travelling along each orb's edge ── */
-.beamTrack {
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  will-change: transform;
-}
-
-.spin6 { animation: wl-spin 6s linear infinite; }
-.spin7r { animation: wl-spin-reverse 7s linear infinite; }
-.spin8 { animation: wl-spin 8s linear infinite; }
-.spin10r { animation: wl-spin-reverse 10s linear infinite; }
-
-.beam {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 60px;
-  height: 4px;
-  margin-left: -30px;
-  border-radius: 2px;
-  transform: translateY(-50%);
-  transition: all 0.5s;
-  background: var(--wl-beam);
-  box-shadow: var(--wl-beam-glow);
-}
-
-@keyframes wl-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-@keyframes wl-spin-reverse {
-  from { transform: rotate(360deg); }
-  to { transform: rotate(0deg); }
-}
-
-/* ── Text ── */
+/* ── Greeting ── */
 .text {
   position: relative;
-  z-index: 10;
   text-align: center;
-  color: var(--wl-title);
-  transition: color 0.5s;
+  padding: 0 1rem;
 }
 
-.title {
-  margin: 0 0 1rem;
-  font-size: 2.25rem;
-  line-height: 2.5rem;
-  font-weight: 200;
-  letter-spacing: 0.2em;
-  opacity: 0;
-  transform: translateY(2rem);
-  filter: blur(4px);
-  transition: all 1000ms ease-out;
-  transition-delay: 500ms;
-}
-
-.letter {
-  display: inline-block;
-  opacity: 0;
-  transform: translateY(1rem);
-  transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.subtitle {
-  margin: 0;
-  font-size: 1.125rem;
-  line-height: 1.75rem;
-  font-weight: 300;
-  letter-spacing: 0.1em;
-  color: var(--wl-subtitle);
-  opacity: 0;
-  transform: translateY(1rem);
-  filter: blur(4px);
-  transition: all 1000ms ease-out;
-  transition-delay: 1500ms;
-}
-
-.entered .title,
-.entered .subtitle {
-  opacity: 1;
-  transform: translateY(0);
-  filter: blur(0);
-}
-
-.entered .letter {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/*
- * Language swap: both words share the same spot and cross-dissolve.
- * The leaving word blurs out while spreading slightly; the arriving word
- * comes into focus while its letter spacing settles back to the resting value.
- */
 .stack {
   display: grid;
   justify-items: center;
 }
 
+.title {
+  margin: 0 0 1rem;
+  font-family: var(--font-hero-display), system-ui, sans-serif;
+  font-size: 3rem;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  /* soft halo, like light from the sphere behind */
+  filter: drop-shadow(0 0 24px var(--wl-glow));
+}
+
+.subtitle {
+  margin: 0;
+  font-family: var(--font-hero-body), system-ui, sans-serif;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  color: var(--wl-sub);
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 900ms ease-out 1.3s, transform 900ms ease-out 1.3s;
+}
+
+.entered .subtitle {
+  opacity: 1;
+  transform: none;
+}
+
+/* Gradient text, per word and per letter (same treatment as the hero name). */
+.title .word,
+.title .letter {
+  background-image: linear-gradient(to right, var(--wl-from), var(--wl-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* First word: letters rise in one by one, like the hero name. */
+@keyframes wl-letter-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+.letter {
+  display: inline-block;
+  opacity: 0;
+}
+
+.entered .letter {
+  animation: wl-letter-in 0.7s cubic-bezier(0.215, 0.61, 0.355, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+/* Language swap: both words share the same spot and cross-dissolve. */
 .word {
   grid-area: 1 / 1;
   white-space: nowrap;
   transition:
     opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
     filter 900ms cubic-bezier(0.22, 1, 0.36, 1),
-    letter-spacing 1100ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.title .word {
-  letter-spacing: 0.2em;
-}
-
-.subtitle .word {
-  letter-spacing: 0.1em;
+    letter-spacing 1100ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1100ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .wordAway {
   opacity: 0;
   filter: blur(14px);
-  pointer-events: none;
+  transform: scale(1.04);
 }
 
 .title .wordAway {
-  letter-spacing: 0.3em;
+  letter-spacing: 0.06em;
 }
 
 .subtitle .wordAway {
@@ -211,23 +143,17 @@
   transition-delay: 120ms;
 }
 
-/* ── Skip: quick dissolve of the whole screen ── */
-.root {
-  transition: background-color 0.5s, opacity 450ms ease-out, filter 450ms ease-out;
-}
-
-.leaving {
+/* Outro: everything dissolves while the sphere grows into the hero. */
+.leaving .skip {
   opacity: 0;
-  filter: blur(8px);
-  pointer-events: none;
+  transition-delay: 0ms;
 }
 
-/* ── Skip control: a thin ring that draws itself over the 5s, next to a lowercase word ── */
+/* ── Skip: a thin ring that draws itself over the 5s, next to a lowercase word ── */
 .skip {
   position: absolute;
   bottom: 2.5rem;
   left: 50%;
-  z-index: 20;
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
@@ -235,12 +161,13 @@
   border: 0;
   border-radius: 9999px;
   background: transparent;
-  color: var(--wl-subtitle);
-  font: inherit;
+  color: var(--wl-muted);
+  font-family: var(--font-hero-body), system-ui, sans-serif;
   font-size: 0.8125rem;
   font-weight: 300;
   letter-spacing: 0.3em;
   cursor: pointer;
+  pointer-events: auto;
   opacity: 0;
   transform: translate(-50%, 0.5rem);
   transition: opacity 600ms ease-out 900ms, transform 600ms ease-out 900ms, color 250ms;
@@ -253,11 +180,11 @@
 
 .skip:hover,
 .skip:focus-visible {
-  color: var(--wl-title);
+  color: var(--wl-strong);
 }
 
 .skip:focus-visible {
-  outline: 1px solid var(--wl-orb-border);
+  outline: 1px solid var(--wl-line);
   outline-offset: 2px;
 }
 
@@ -275,15 +202,15 @@
 }
 
 .skipTrack {
-  stroke: var(--wl-orb-border);
+  stroke: var(--wl-line);
 }
 
 .skipProgress {
-  stroke: var(--wl-title);
+  stroke: var(--wl-to);
   stroke-linecap: round;
   stroke-dasharray: 62.83;
   stroke-dashoffset: 62.83;
-  filter: drop-shadow(0 0 3px var(--wl-orb-glow-1));
+  filter: drop-shadow(0 0 3px var(--wl-glow));
   animation-name: wl-countdown;
   animation-timing-function: linear;
   animation-fill-mode: forwards;
@@ -303,10 +230,14 @@
 @media (min-width: 768px) {
   .title {
     font-size: 4.5rem;
-    line-height: 1;
   }
   .subtitle {
     font-size: 1.25rem;
-    line-height: 1.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .title {
+    font-size: 6rem;
   }
 }
