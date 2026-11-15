@@ -4,6 +4,7 @@ import '../globals.css';
 import { fontVariables } from '../fonts';
 import ThemeKeeper from '@/components/ThemeKeeper';
 import ThemeScript from '@/components/ThemeScript';
+import IntroScrollScript from '@/components/site/IntroScrollScript';
 import SiteFooter from '@/components/site/SiteFooter';
 import Tracker from '@/components/site/Tracker';
 import SiteDock from '@/components/site/Dock';
@@ -73,6 +74,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
     <html lang={locale === 'pt' ? 'pt-BR' : 'en'} className={fontVariables} suppressHydrationWarning>
       <head>
         <ThemeScript />
+        <IntroScrollScript />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }} />
       </head>
       <body className="night min-h-screen">

@@ -43,6 +43,9 @@ export default function WelcomeLoader({ locale }: WelcomeLoaderProps) {
   const [done, setDone] = useState(skipped);
 
   const leavingRef = useRef(false);
+  const pendingHash = useRef('');
+  /** Removes the "stay at the top" guard. Must run when the intro ends: this component stays mounted. */
+  const releaseTop = useRef<() => void>(() => {});
 
   const leave = useCallback(() => {
     if (leavingRef.current) return;
@@ -65,6 +68,21 @@ export default function WelcomeLoader({ locale }: WelcomeLoaderProps) {
       if (e.key === 'Escape') leave();
     };
     window.addEventListener('keydown', onKey);
+
+    // The intro has no background of its own, so it must start at the top: on a reload the browser
+    // would restore the previous scroll position (or jump to a #hash) behind the greeting.
+    pendingHash.current = (window as Window & { __introHash?: string }).__introHash ?? window.location.hash;
+    window.scrollTo(0, 0);
+    const keepTop = () => {
+      if (window.scrollY !== 0) window.scrollTo(0, 0);
+    };
+    window.addEventListener('scroll', keepTop, { passive: true });
+    window.addEventListener('load', keepTop);
+    releaseTop.current = () => {
+      window.removeEventListener('scroll', keepTop);
+      window.removeEventListener('load', keepTop);
+    };
+
     const root = document.documentElement;
     const previousOverflow = root.style.overflow;
     root.style.overflow = 'hidden';
@@ -73,6 +91,7 @@ export default function WelcomeLoader({ locale }: WelcomeLoaderProps) {
       timers.forEach(clearTimeout);
       clearTimeout(outroTimer);
       window.removeEventListener('keydown', onKey);
+      releaseTop.current();
       root.style.overflow = previousOverflow;
     };
   }, [skipped, leave]);
@@ -84,8 +103,18 @@ export default function WelcomeLoader({ locale }: WelcomeLoaderProps) {
 
   useEffect(() => {
     if (!done || skipped) return;
+    releaseTop.current();
     document.documentElement.style.overflow = '';
     window.dispatchEvent(new Event('welcome:done'));
+    // If the address had an anchor (e.g. reloading after the dock's "Contato"), go there after the intro.
+    const hash = pendingHash.current;
+    if (hash.length > 1) {
+      const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+      if (target) requestAnimationFrame(() => target.scrollIntoView({ behavior: 'smooth' }));
+      if (window.location.hash !== hash) {
+        history.replaceState(history.state, '', `${window.location.pathname}${window.location.search}${hash}`);
+      }
+    }
   }, [done, skipped]);
 
   if (done) return null;
