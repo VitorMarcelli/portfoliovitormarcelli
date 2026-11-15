@@ -126,6 +126,7 @@ function DockItem({
   ariaLabel: string;
 }) {
   const ref = useRef<HTMLElement>(null);
+  const router = useRouter();
   const { mouseX, baseSize, registerMeasure } = useDock();
   const isHovered = useMotionValue(0);
   const center = useRef<number | null>(null);
@@ -164,21 +165,18 @@ function DockItem({
       'relative inline-flex aspect-square items-center justify-center rounded-full bg-[#e5e7eb] outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus)] dark:bg-[#262626]',
   };
 
-  if (href) {
-    return (
-      <motion.a
-        ref={ref as Ref<HTMLAnchorElement>}
-        href={href}
-        onClick={onClick}
-        {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-        {...shared}
-      >
-        {content}
-      </motion.a>
-    );
+  // Buttons, not links, like the reference dock: sweeping the mouse over links makes the browser
+  // show and hide its URL status bubble for every icon, which stutters in some browsers (Opera GX).
+  function activate() {
+    onClick?.();
+    if (!href) return;
+    if (external) window.open(href, '_blank', 'noopener,noreferrer');
+    else if (href.startsWith('mailto:')) window.location.href = href;
+    else router.push(href);
   }
+
   return (
-    <motion.button ref={ref as Ref<HTMLButtonElement>} type="button" onClick={onClick} {...shared}>
+    <motion.button ref={ref as Ref<HTMLButtonElement>} type="button" onClick={activate} {...shared}>
       {content}
     </motion.button>
   );
