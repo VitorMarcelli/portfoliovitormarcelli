@@ -91,9 +91,10 @@ body {
   html {
     scroll-behavior: auto;
   }
-  *,
-  *::before,
-  *::after {
+  /* The welcome screen is exempt by request: it always animates, like the reference design. */
+  *:not(.welcome-loader, .welcome-loader *),
+  *:not(.welcome-loader, .welcome-loader *)::before,
+  *:not(.welcome-loader, .welcome-loader *)::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
