@@ -91,13 +91,14 @@ body {
   html {
     scroll-behavior: auto;
   }
-  /* The welcome screen is exempt by request: it always animates, like the reference design. */
-  *:not(.welcome-loader, .welcome-loader *),
-  *:not(.welcome-loader, .welcome-loader *)::before,
-  *:not(.welcome-loader, .welcome-loader *)::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  /*
+   * Targeted on purpose. A universal `*:not(...)` rule here was re-evaluated on every style
+   * recalculation and made the dock stutter for visitors with reduced motion on. The site's only
+   * large motion is the hero entrance; hover color/opacity fades are kept. The welcome screen is
+   * exempt by request and always animates, like the reference design.
+   */
+  .rise {
+    animation: none;
   }
 }
 
