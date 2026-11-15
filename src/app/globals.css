@@ -116,6 +116,11 @@ body {
   animation-delay: var(--delay, 0ms);
 }
 
+/* While the welcome screen covers the page, hold the hero entrance so it plays when the screen leaves. */
+.welcome-loader ~ section .rise {
+  animation-play-state: paused;
+}
+
 /* Long-form project text */
 .prose-case p + p {
   margin-top: 1.1em;

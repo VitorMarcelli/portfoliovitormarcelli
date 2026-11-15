@@ -1,0 +1,178 @@
+/* Full-screen welcome screen shown on the home page for 3s after hydration. */
+
+.root {
+  --wl-bg: #f1f5f9;
+  --wl-orb: #f0f4ff;
+  --wl-orb-border: rgba(99, 102, 241, 0.4);
+  --wl-orb-glow-1: rgba(99, 102, 241, 0.3);
+  --wl-orb-glow-2: rgba(99, 102, 241, 0.15);
+  --wl-orb-inset: rgba(99, 102, 241, 0.08);
+  --wl-title: #312e81;
+  --wl-subtitle: rgba(79, 70, 229, 0.6);
+  --wl-beam: linear-gradient(90deg, transparent 0%, rgba(99, 102, 241, 0.5) 30%, rgba(129, 140, 248, 0.9) 70%, rgba(99, 102, 241, 1) 100%);
+  --wl-beam-glow: 0 0 20px 4px rgba(99, 102, 241, 0.6), 0 0 40px 8px rgba(129, 140, 248, 0.3);
+
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--wl-bg);
+  transition: background-color 0.5s;
+  font-family: ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  /* Failsafe: never block the site if the script that removes the screen does not run. */
+  animation: wl-failsafe 0s linear 8s forwards;
+}
+
+:global(.dark) .root {
+  --wl-bg: #050a18;
+  --wl-orb: #050a18;
+  --wl-orb-border: rgba(100, 180, 255, 0.3);
+  --wl-orb-glow-1: rgba(59, 130, 246, 0.4);
+  --wl-orb-glow-2: rgba(59, 130, 246, 0.2);
+  --wl-orb-inset: rgba(59, 130, 246, 0.1);
+  --wl-title: #ffffff;
+  --wl-subtitle: rgba(255, 255, 255, 0.6);
+  --wl-beam: linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.5) 30%, rgba(150, 200, 255, 0.9) 70%, white 100%);
+  --wl-beam-glow: 0 0 20px 4px rgba(100, 180, 255, 0.8), 0 0 40px 8px rgba(59, 130, 246, 0.4);
+}
+
+@keyframes wl-failsafe {
+  to {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+/* ── Orbs ── */
+.orbSlot {
+  position: absolute;
+  transition: opacity 1000ms ease-out, transform 1000ms ease-out;
+  opacity: 0;
+}
+
+.orbA { top: -40%; left: -20%; width: 80vw; height: 80vw; max-width: 800px; max-height: 800px; transform: translateY(-2.5rem); }
+.orbB { bottom: -50%; left: 50%; width: 100vw; height: 100vw; max-width: 1000px; max-height: 1000px; transform: translateX(-50%) translateY(2.5rem); transition-delay: 300ms; }
+.orbC { top: -30%; right: -25%; width: 70vw; height: 70vw; max-width: 700px; max-height: 700px; transform: translateX(2.5rem); transition-delay: 500ms; }
+.orbD { bottom: -35%; right: -15%; width: 75vw; height: 75vw; max-width: 750px; max-height: 750px; transform: translateY(2.5rem); transition-delay: 700ms; }
+
+.entered .orbSlot { opacity: 1; }
+.entered .orbA { transform: translateY(0); }
+.entered .orbB { transform: translateX(-50%) translateY(0); }
+.entered .orbC { transform: translateX(0); }
+.entered .orbD { transform: translateY(0); }
+
+.orb {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 50% 50%, var(--wl-orb) 0%, var(--wl-orb) 90%, transparent 100%);
+  box-shadow: 0 0 60px 2px var(--wl-orb-glow-1), 0 0 100px 5px var(--wl-orb-glow-2), inset 0 0 60px 2px var(--wl-orb-inset);
+  border: 1px solid var(--wl-orb-border);
+  transition: all 0.5s;
+}
+
+/* ── Light beams travelling along each orb's edge ── */
+.beamTrack {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+.spin6 { animation: wl-spin 6s linear infinite; }
+.spin7r { animation: wl-spin-reverse 7s linear infinite; }
+.spin8 { animation: wl-spin 8s linear infinite; }
+.spin10r { animation: wl-spin-reverse 10s linear infinite; }
+
+.beam {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 60px;
+  height: 4px;
+  margin-left: -30px;
+  border-radius: 2px;
+  transform: translateY(-50%);
+  transition: all 0.5s;
+  background: var(--wl-beam);
+  box-shadow: var(--wl-beam-glow);
+}
+
+@keyframes wl-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes wl-spin-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+/* ── Text ── */
+.text {
+  position: relative;
+  z-index: 10;
+  text-align: center;
+  color: var(--wl-title);
+  transition: color 0.5s;
+}
+
+.title {
+  margin: 0 0 1rem;
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  font-weight: 200;
+  letter-spacing: 0.2em;
+  opacity: 0;
+  transform: translateY(2rem);
+  filter: blur(4px);
+  transition: all 1000ms ease-out;
+  transition-delay: 500ms;
+}
+
+.letter {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(1rem);
+  transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  font-weight: 300;
+  letter-spacing: 0.1em;
+  color: var(--wl-subtitle);
+  opacity: 0;
+  transform: translateY(1rem);
+  filter: blur(4px);
+  transition: all 1000ms ease-out;
+  transition-delay: 1500ms;
+}
+
+.entered .title,
+.entered .subtitle {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+.entered .letter {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (min-width: 768px) {
+  .title {
+    font-size: 4.5rem;
+    line-height: 1;
+  }
+  .subtitle {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+}

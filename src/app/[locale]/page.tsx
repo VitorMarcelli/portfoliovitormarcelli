@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import ContactForm from '@/components/site/ContactForm';
 import ProjectCover from '@/components/site/ProjectCover';
 import TrackedLink from '@/components/site/TrackedLink';
+import WelcomeLoader from '@/components/site/WelcomeLoader';
 import { getDictionary, isLocale, localePath, type Dictionary } from '@/i18n/dictionaries';
 import { getExperiences, getProjects, getPublicSettings } from '@/lib/data';
 import { CONTACT } from '@/lib/env';
@@ -24,6 +25,7 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
 
   return (
     <>
+      <WelcomeLoader subtitle="Loading Portfolio..." />
       <Hero t={t} settings={settings} />
       <Projects t={t} locale={locale} projects={projects} />
       <About t={t} />
