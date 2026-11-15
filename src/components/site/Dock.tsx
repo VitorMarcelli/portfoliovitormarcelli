@@ -23,7 +23,11 @@ import {
   type ReactNode,
   type Ref,
 } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { localePath } from '@/i18n/dictionaries';
+import type { Locale } from '@/lib/types';
 import { track } from './Tracker';
+import { skipNextWelcome } from './welcomeSkip';
 
 /* ───────────────────────── Dock primitives ───────────────────────── */
 
@@ -32,9 +36,13 @@ const MAGNIFICATION = 90;
 const DISTANCE = 80;
 const PANEL_HEIGHT = 64;
 const ICON_SIZE = 40;
+/** Narrow screens (below Tailwind's sm) get smaller resting icons so eight of them fit. */
+const ICON_SIZE_COMPACT = 32;
+const COMPACT_QUERY = '(max-width: 639px)';
 
 interface DockContextValue {
   mouseX: MotionValue<number>;
+  baseSize: MotionValue<number>;
   /** Items register a function that caches their resting center; the panel calls them on mouse enter. */
   registerMeasure: (measure: () => void) => () => void;
 }
@@ -49,16 +57,27 @@ function useDock() {
 
 function DockPanel({ children, label }: { children: ReactNode; label: string }) {
   const mouseX = useMotionValue(Infinity);
+  const baseSize = useMotionValue(ICON_SIZE);
   const measures = useRef(new Set<() => void>());
+
+  useEffect(() => {
+    const media = window.matchMedia(COMPACT_QUERY);
+    const apply = () => baseSize.set(media.matches ? ICON_SIZE_COMPACT : ICON_SIZE);
+    apply();
+    media.addEventListener('change', apply);
+    return () => media.removeEventListener('change', apply);
+  }, [baseSize]);
+
   const context = useMemo<DockContextValue>(
     () => ({
       mouseX,
+      baseSize,
       registerMeasure: (measure) => {
         measures.current.add(measure);
         return () => measures.current.delete(measure);
       },
     }),
-    [mouseX],
+    [mouseX, baseSize],
   );
   const isHovered = useMotionValue(0);
   const maxHeight = useMemo(() => Math.max(128, MAGNIFICATION + MAGNIFICATION / 2 + 4), []);
@@ -77,7 +96,7 @@ function DockPanel({ children, label }: { children: ReactNode; label: string }) 
           isHovered.set(0);
           mouseX.set(Infinity);
         }}
-        className="mx-auto flex w-fit items-end gap-4 rounded-2xl bg-[#f9fafb] px-4 pb-3 dark:bg-[#171717]"
+        className="mx-auto flex w-fit items-end gap-2.5 rounded-2xl bg-[#f9fafb] px-3 pb-3 sm:gap-4 sm:px-4 dark:bg-[#171717]"
         style={{ height: PANEL_HEIGHT }}
         role="toolbar"
         aria-label={label}
@@ -107,7 +126,7 @@ function DockItem({
   ariaLabel: string;
 }) {
   const ref = useRef<HTMLElement>(null);
-  const { mouseX, registerMeasure } = useDock();
+  const { mouseX, baseSize, registerMeasure } = useDock();
   const isHovered = useMotionValue(0);
   const center = useRef<number | null>(null);
 
@@ -123,7 +142,11 @@ function DockItem({
   );
 
   const mouseDistance = useTransform(mouseX, (x) => (center.current === null ? Infinity : x - center.current));
-  const widthRaw = useTransform(mouseDistance, [-DISTANCE, 0, DISTANCE], [ICON_SIZE, MAGNIFICATION, ICON_SIZE]);
+  // Same curve as interpolating [-DISTANCE, 0, DISTANCE] → [base, MAGNIFICATION, base], with a responsive base.
+  const widthRaw = useTransform([mouseDistance, baseSize], ([distance, base]: number[]) => {
+    const closeness = Math.max(0, 1 - Math.abs(distance) / DISTANCE);
+    return base + (MAGNIFICATION - base) * closeness;
+  });
   const width = useSpring(widthRaw, SPRING);
 
   const content = Children.map(children, (child) =>
@@ -159,6 +182,10 @@ function DockItem({
       {content}
     </motion.button>
   );
+}
+
+function DockDivider() {
+  return <span aria-hidden="true" className="mb-1.5 h-7 w-px shrink-0 self-end bg-[#d4d4d4] sm:h-8 dark:bg-[#404040]" />;
 }
 
 function DockLabel({ children, isHovered }: { children: ReactNode } & ItemChildProps) {
@@ -201,6 +228,36 @@ function DockIcon({ children, width }: { children: ReactNode } & ItemChildProps)
 /* ───────────────────────── Icons ───────────────────────── */
 
 const iconClass = 'h-full w-full';
+
+function FolderIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass} aria-hidden="true">
+      <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
+    </svg>
+  );
+}
+
+function ChatIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass} aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
+function LanguagesIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass} aria-hidden="true">
+      <path d="m5 8 6 6" />
+      <path d="m4 14 6-6 2-3" />
+      <path d="M2 5h12" />
+      <path d="M7 2h1" />
+      <path d="m22 22-5-10-5 10" />
+      <path d="M14 18h6" />
+    </svg>
+  );
+}
+
 
 function HomeIcon() {
   return (
@@ -274,14 +331,18 @@ function SunMoonIcon() {
 export interface DockLabels {
   toolbar: string;
   home: string;
+  projects: string;
+  contact: string;
   github: string;
   linkedin: string;
   whatsapp: string;
   email: string;
+  language: string;
   theme: string;
 }
 
 interface SiteDockProps {
+  locale: Locale;
   labels: DockLabels;
   github: string;
   linkedin: string;
@@ -299,12 +360,25 @@ function toggleTheme() {
   }
 }
 
+/** Same page in the other language: "/projetos/x" ↔ "/en/projetos/x". */
+function alternatePath(pathname: string, locale: Locale) {
+  if (locale === 'pt') return pathname === '/' ? '/en' : `/en${pathname}`;
+  return pathname.replace(/^\/en(?=\/|$)/, '') || '/';
+}
+
 /**
- * Bottom navigation dock with magnifying icons. While the welcome screen is on top,
- * it stays hidden and rises into place once the screen leaves.
+ * Bottom navigation dock with magnifying icons; it is the site's only navigation bar.
+ * Groups: navigate (home, projects, contact) · profiles · preferences (language, theme).
+ * While the welcome screen is on top it stays hidden and rises into place once the screen leaves.
  */
-export default function SiteDock({ labels, github, linkedin, email, whatsappHref }: SiteDockProps) {
+export default function SiteDock({ locale, labels, github, linkedin, email, whatsappHref }: SiteDockProps) {
+  // Portuguese pages are rendered internally under /pt but served at the root: normalize so the
+  // server and the browser agree (a mismatch here re-renders the whole page and drops the theme class).
+  const pathname = usePathname().replace(/^\/pt(?=\/|$)/, '') || '/';
+  const router = useRouter();
   const [ready, setReady] = useState(false);
+  const home = localePath(locale);
+  const onHome = pathname === home;
 
   useEffect(() => {
     if (!document.querySelector('.welcome-loader')) {
@@ -321,6 +395,11 @@ export default function SiteDock({ labels, github, linkedin, email, whatsappHref
     };
   }, []);
 
+  function switchLanguage() {
+    skipNextWelcome();
+    router.push(alternatePath(pathname, locale));
+  }
+
   return (
     <motion.nav
       aria-label={labels.toolbar}
@@ -331,12 +410,36 @@ export default function SiteDock({ labels, github, linkedin, email, whatsappHref
       className="fixed bottom-4 left-1/2 z-50 mb-4 -translate-x-1/2"
     >
       <DockPanel label={labels.toolbar}>
-        <DockItem ariaLabel={labels.home} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <DockLabel>{labels.home}</DockLabel>
+        {onHome ? (
+          <DockItem ariaLabel={labels.home} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <DockLabel>{labels.home}</DockLabel>
+            <DockIcon>
+              <HomeIcon />
+            </DockIcon>
+          </DockItem>
+        ) : (
+          <DockItem ariaLabel={labels.home} href={home}>
+            <DockLabel>{labels.home}</DockLabel>
+            <DockIcon>
+              <HomeIcon />
+            </DockIcon>
+          </DockItem>
+        )}
+        <DockItem ariaLabel={labels.projects} href={`${home}#projetos`}>
+          <DockLabel>{labels.projects}</DockLabel>
           <DockIcon>
-            <HomeIcon />
+            <FolderIcon />
           </DockIcon>
         </DockItem>
+        <DockItem ariaLabel={labels.contact} href={`${home}#contato`}>
+          <DockLabel>{labels.contact}</DockLabel>
+          <DockIcon>
+            <ChatIcon />
+          </DockIcon>
+        </DockItem>
+
+        <DockDivider />
+
         <DockItem ariaLabel={labels.github} href={github} external onClick={() => track('click', 'github')}>
           <DockLabel>{labels.github}</DockLabel>
           <DockIcon>
@@ -349,18 +452,28 @@ export default function SiteDock({ labels, github, linkedin, email, whatsappHref
             <LinkedinIcon />
           </DockIcon>
         </DockItem>
-        {whatsappHref && (
+        {whatsappHref ? (
           <DockItem ariaLabel={labels.whatsapp} href={whatsappHref} external onClick={() => track('click', 'whatsapp')}>
             <DockLabel>{labels.whatsapp}</DockLabel>
             <DockIcon>
               <WhatsappIcon />
             </DockIcon>
           </DockItem>
+        ) : (
+          <DockItem ariaLabel={labels.email} href={`mailto:${email}`} onClick={() => track('click', 'email')}>
+            <DockLabel>{labels.email}</DockLabel>
+            <DockIcon>
+              <MailIcon />
+            </DockIcon>
+          </DockItem>
         )}
-        <DockItem ariaLabel={labels.email} href={`mailto:${email}`} onClick={() => track('click', 'email')}>
-          <DockLabel>{labels.email}</DockLabel>
+
+        <DockDivider />
+
+        <DockItem ariaLabel={labels.language} onClick={switchLanguage}>
+          <DockLabel>{labels.language}</DockLabel>
           <DockIcon>
-            <MailIcon />
+            <LanguagesIcon />
           </DockIcon>
         </DockItem>
         <DockItem ariaLabel={labels.theme} onClick={toggleTheme}>

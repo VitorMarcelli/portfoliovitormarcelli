@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from 'next';
 import { notFound } from 'next/navigation';
 import '../globals.css';
 import { fontVariables } from '../fonts';
+import ThemeKeeper from '@/components/ThemeKeeper';
 import ThemeScript from '@/components/ThemeScript';
-import SiteHeader from '@/components/site/SiteHeader';
 import SiteFooter from '@/components/site/SiteFooter';
 import Tracker from '@/components/site/Tracker';
 import SiteDock from '@/components/site/Dock';
@@ -74,16 +74,23 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }} />
       </head>
       <body className="min-h-screen">
-        <SiteHeader locale={locale} nav={t.nav} />
+        <a
+          href="#conteudo"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-[60] focus:rounded focus:bg-accent focus:px-3 focus:py-2 focus:text-accent-fg"
+        >
+          {t.nav.skip}
+        </a>
         <main id="conteudo">{children}</main>
         <SiteFooter locale={locale} t={t} />
         <SiteDock
+          locale={locale}
           labels={t.dock}
           github={CONTACT.github}
           linkedin={CONTACT.linkedin}
           email={CONTACT.email}
           whatsappHref={settings.whatsappNumber ? whatsappLink(settings.whatsappNumber, t.contact.whatsappMessage) : null}
         />
+        <ThemeKeeper />
         <Tracker />
       </body>
     </html>

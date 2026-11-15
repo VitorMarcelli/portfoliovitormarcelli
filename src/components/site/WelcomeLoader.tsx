@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { Locale } from '@/lib/types';
 import styles from './WelcomeLoader.module.css';
+import { clearSkipWelcome, shouldSkipWelcome } from './welcomeSkip';
 
 const DURATION_MS = 5000;
 /** When the greeting dissolves into the page language (ms after the screen starts). */
@@ -28,11 +29,18 @@ export default function WelcomeLoader({ locale }: WelcomeLoaderProps) {
   const first = GREETINGS[locale === 'pt' ? 'en' : 'pt'];
   const last = GREETINGS[locale];
 
+  // Skipped right after an in-site language switch, so visitors do not wait 5s again.
+  const [skipped] = useState(shouldSkipWelcome);
   const [entered, setEntered] = useState(false);
   const [swapped, setSwapped] = useState(false);
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState(skipped);
 
   useEffect(() => {
+    clearSkipWelcome();
+    if (skipped) {
+      window.dispatchEvent(new Event('welcome:done'));
+      return;
+    }
     // Next frame, so the hidden server-rendered state is painted before the transitions start.
     const frame = requestAnimationFrame(() => setEntered(true));
     const swapTimer = setTimeout(() => setSwapped(true), SWAP_AT_MS);
@@ -46,13 +54,13 @@ export default function WelcomeLoader({ locale }: WelcomeLoaderProps) {
       clearTimeout(doneTimer);
       root.style.overflow = previousOverflow;
     };
-  }, []);
+  }, [skipped]);
 
   useEffect(() => {
-    if (!done) return;
+    if (!done || skipped) return;
     document.documentElement.style.overflow = '';
     window.dispatchEvent(new Event('welcome:done'));
-  }, [done]);
+  }, [done, skipped]);
 
   if (done) return null;
 
