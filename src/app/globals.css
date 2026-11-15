@@ -119,8 +119,100 @@ body {
 }
 
 /* While the welcome screen covers the page, hold the hero entrance so it plays when the screen leaves. */
-.welcome-loader ~ section .rise {
+.welcome-loader ~ section :is(.rise, .hero-char, .hero-fade) {
   animation-play-state: paused;
+}
+
+/* ─── Home hero: same palette as the welcome screen, so one dissolves into the other ─── */
+.hero-stage {
+  --hero-bg: #f1f5f9;
+  --hero-from: #4f46e5;
+  --hero-to: #818cf8;
+  --hero-role: #312e81;
+  --hero-tagline: rgba(49, 46, 129, 0.7);
+  --hero-lead: rgba(30, 27, 75, 0.78);
+  --hero-highlight: #3730a3;
+  --hero-muted: rgba(49, 46, 129, 0.45);
+  --hero-line: rgba(49, 46, 129, 0.3);
+  background: var(--hero-bg);
+  /* Clips the fixed 3D canvas to this section: it stays still while the hero scrolls away. */
+  clip-path: inset(0);
+}
+
+.dark .hero-stage {
+  --hero-bg: #050a18;
+  --hero-from: #3b82f6;
+  --hero-to: #96c8ff;
+  --hero-role: rgba(255, 255, 255, 0.9);
+  --hero-tagline: rgba(255, 255, 255, 0.7);
+  --hero-lead: rgba(255, 255, 255, 0.6);
+  --hero-highlight: #c3e0ff;
+  --hero-muted: rgba(255, 255, 255, 0.4);
+  --hero-line: rgba(255, 255, 255, 0.3);
+}
+
+.hero-gradient,
+.hero-gradient .hero-char {
+  background-image: linear-gradient(to right, var(--hero-from), var(--hero-to));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-role {
+  color: var(--hero-role);
+}
+.hero-tagline {
+  color: var(--hero-tagline);
+}
+.hero-lead {
+  color: var(--hero-lead);
+}
+.hero-highlight {
+  color: var(--hero-highlight);
+}
+.hero-scroll-label {
+  color: var(--hero-muted);
+}
+.hero-scroll-mouse {
+  border-color: var(--hero-line);
+}
+.hero-scroll-dot {
+  background: var(--hero-from);
+}
+
+@keyframes hero-char-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes hero-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-char {
+  display: inline-block;
+  /* GSAP power2.out */
+  animation: hero-char-in 0.6s cubic-bezier(0.215, 0.61, 0.355, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+.hero-fade {
+  animation: hero-fade-up 0.8s ease-out both;
+  animation-delay: var(--d, 0ms);
 }
 
 /* Long-form project text */

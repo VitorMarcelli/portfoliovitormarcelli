@@ -180,9 +180,9 @@
   grid-area: 1 / 1;
   white-space: nowrap;
   transition:
-    opacity 1200ms cubic-bezier(0.22, 1, 0.36, 1),
-    filter 1200ms cubic-bezier(0.22, 1, 0.36, 1),
-    letter-spacing 1400ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 900ms cubic-bezier(0.22, 1, 0.36, 1),
+    letter-spacing 1100ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .title .word {
@@ -208,7 +208,96 @@
 }
 
 .wordArriving {
-  transition-delay: 180ms;
+  transition-delay: 120ms;
+}
+
+/* ── Skip: quick dissolve of the whole screen ── */
+.root {
+  transition: background-color 0.5s, opacity 450ms ease-out, filter 450ms ease-out;
+}
+
+.leaving {
+  opacity: 0;
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+/* ── Skip control: a thin ring that draws itself over the 5s, next to a lowercase word ── */
+.skip {
+  position: absolute;
+  bottom: 2.5rem;
+  left: 50%;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--wl-subtitle);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 300;
+  letter-spacing: 0.3em;
+  cursor: pointer;
+  opacity: 0;
+  transform: translate(-50%, 0.5rem);
+  transition: opacity 600ms ease-out 900ms, transform 600ms ease-out 900ms, color 250ms;
+}
+
+.entered .skip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.skip:hover,
+.skip:focus-visible {
+  color: var(--wl-title);
+}
+
+.skip:focus-visible {
+  outline: 1px solid var(--wl-orb-border);
+  outline-offset: 2px;
+}
+
+.skipRing {
+  width: 1.125rem;
+  height: 1.125rem;
+  transform: rotate(-90deg);
+  overflow: visible;
+}
+
+.skipTrack,
+.skipProgress {
+  fill: none;
+  stroke-width: 1.5;
+}
+
+.skipTrack {
+  stroke: var(--wl-orb-border);
+}
+
+.skipProgress {
+  stroke: var(--wl-title);
+  stroke-linecap: round;
+  stroke-dasharray: 62.83;
+  stroke-dashoffset: 62.83;
+  filter: drop-shadow(0 0 3px var(--wl-orb-glow-1));
+  animation-name: wl-countdown;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes wl-countdown {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.skipText {
+  /* optical balance for the wide letter spacing */
+  margin-right: -0.3em;
 }
 
 @media (min-width: 768px) {

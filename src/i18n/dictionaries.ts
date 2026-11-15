@@ -32,13 +32,13 @@ const pt = {
     skip: 'Pular para o conteúdo',
   },
   hero: {
-    role: 'Desenvolvedor full stack',
-    manifesto:
-      'Construo sistemas web, automações e integrações que tiram trabalho manual da rotina de empresas: emissão de guias fiscais, atendimento por WhatsApp com IA, painéis de gestão.',
-    available: 'Aceitando novos projetos',
-    unavailable: 'Agenda cheia no momento',
-    primaryCta: 'Ver projetos',
-    whatsappCta: 'Conversar no WhatsApp',
+    role: 'Desenvolvedor Full Stack',
+    tagline: '& Automação de Processos',
+    leadBefore: 'Construo sistemas web, automações e integrações que ',
+    leadHighlight: 'tiram trabalho manual',
+    leadAfter: ' da rotina de empresas',
+    leadSecond: 'Emissão de guias fiscais, atendimento por WhatsApp com IA e painéis de gestão',
+    scroll: 'Role para explorar',
   },
   about: {
     title: 'Sobre',
@@ -188,13 +188,13 @@ const en: Dictionary = {
     skip: 'Skip to content',
   },
   hero: {
-    role: 'Full stack developer',
-    manifesto:
-      'I build web systems, automations and integrations that take manual work off a company’s plate: tax slip issuing, WhatsApp support with AI, management dashboards.',
-    available: 'Taking on new projects',
-    unavailable: 'Fully booked right now',
-    primaryCta: 'See projects',
-    whatsappCta: 'Chat on WhatsApp',
+    role: 'Full Stack Developer',
+    tagline: '& Process Automation',
+    leadBefore: 'I build web systems, automations and integrations that ',
+    leadHighlight: 'take manual work',
+    leadAfter: ' off a company’s plate',
+    leadSecond: 'Tax slip issuing, WhatsApp support with AI and management dashboards',
+    scroll: 'Scroll to explore',
   },
   about: {
     title: 'About',

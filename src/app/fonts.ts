@@ -1,4 +1,4 @@
-import { Bricolage_Grotesque, IBM_Plex_Sans } from 'next/font/google';
+import { Bricolage_Grotesque, IBM_Plex_Sans, Inter, Outfit } from 'next/font/google';
 
 export const displayFont = Bricolage_Grotesque({
   subsets: ['latin'],
@@ -13,4 +13,19 @@ export const bodyFont = IBM_Plex_Sans({
   display: 'swap',
 });
 
-export const fontVariables = `${displayFont.variable} ${bodyFont.variable}`;
+/** Hero fonts, same as the reference design (Outfit for headings, Inter for text). */
+export const heroDisplayFont = Outfit({
+  subsets: ['latin'],
+  weight: ['500', '700'],
+  variable: '--font-hero-display',
+  display: 'swap',
+});
+
+export const heroBodyFont = Inter({
+  subsets: ['latin'],
+  weight: ['300', '400', '600'],
+  variable: '--font-hero-body',
+  display: 'swap',
+});
+
+export const fontVariables = `${displayFont.variable} ${bodyFont.variable} ${heroDisplayFont.variable} ${heroBodyFont.variable}`;

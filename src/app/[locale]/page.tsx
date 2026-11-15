@@ -4,6 +4,7 @@ import ContactForm from '@/components/site/ContactForm';
 import ProjectCover from '@/components/site/ProjectCover';
 import TrackedLink from '@/components/site/TrackedLink';
 import WelcomeLoader from '@/components/site/WelcomeLoader';
+import HomeHero from '@/components/site/HomeHero';
 import { getDictionary, isLocale, localePath, type Dictionary } from '@/i18n/dictionaries';
 import { getExperiences, getProjects, getPublicSettings } from '@/lib/data';
 import { CONTACT } from '@/lib/env';
@@ -26,7 +27,7 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
   return (
     <>
       <WelcomeLoader locale={locale} />
-      <Hero t={t} settings={settings} />
+      <HomeHero t={t.hero} />
       <Projects t={t} locale={locale} projects={projects} />
       <About t={t} />
       <Services t={t} />
@@ -45,60 +46,6 @@ function SectionTitle({ id, children }: { id: string; children: React.ReactNode 
     <h2 id={id} className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
       {children}
     </h2>
-  );
-}
-
-function Hero({ t, settings }: { t: Dictionary; settings: PublicSettings }) {
-  const wa = settings.whatsappNumber ? whatsappLink(settings.whatsappNumber, t.contact.whatsappMessage) : null;
-
-  return (
-    <section className={`${container} flex min-h-[80svh] flex-col justify-end pb-32 pt-12 sm:min-h-svh sm:pb-36 sm:pt-16`}>
-      <p className="rise flex items-center gap-2.5 text-sm text-muted" style={{ '--delay': '0ms' } as React.CSSProperties}>
-        <span
-          className={`h-2 w-2 rounded-full ${settings.available ? 'bg-success' : 'bg-muted'}`}
-          aria-hidden="true"
-        />
-        {settings.available ? t.hero.available : t.hero.unavailable}
-      </p>
-
-      <h1 className="mt-6 font-display font-extrabold leading-[0.86] tracking-[-0.045em] text-[clamp(3.6rem,15vw,12.5rem)]">
-        <span className="rise block" style={{ '--delay': '80ms' } as React.CSSProperties}>
-          Vitor
-        </span>
-        <span className="rise block" style={{ '--delay': '180ms' } as React.CSSProperties}>
-          Marcelli
-        </span>
-      </h1>
-
-      <div
-        className="rise mt-10 grid gap-8 border-t border-border pt-8 md:grid-cols-[1fr_auto] md:items-end"
-        style={{ '--delay': '320ms' } as React.CSSProperties}
-      >
-        <div className="max-w-2xl">
-          <p className="text-base font-medium text-accent-text">{t.hero.role}</p>
-          <p className="mt-3 text-xl leading-snug sm:text-2xl">{t.hero.manifesto}</p>
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
-          <a
-            href="#projetos"
-            className="inline-flex items-center justify-center rounded-full bg-foreground px-7 py-3.5 font-medium text-background transition-opacity hover:opacity-90"
-          >
-            {t.hero.primaryCta}
-          </a>
-          {wa && (
-            <TrackedLink
-              event="whatsapp"
-              href={wa}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center rounded-full bg-accent px-7 py-3.5 font-medium text-accent-fg transition-opacity hover:opacity-90"
-            >
-              {t.hero.whatsappCta}
-            </TrackedLink>
-          )}
-        </div>
-      </div>
-    </section>
   );
 }
 
