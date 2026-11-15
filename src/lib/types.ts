@@ -1,5 +1,13 @@
 export type Locale = 'pt' | 'en';
 
+export type ProjectStatus = 'live' | 'mvp' | 'in_progress' | 'completed';
+
+export interface GalleryItem {
+  url: string;
+  caption_pt?: string | null;
+  caption_en?: string | null;
+}
+
 export interface ProjectRow {
   id: string;
   slug: string;
@@ -19,8 +27,32 @@ export interface ProjectRow {
   featured: boolean;
   published: boolean;
   sort_order: number;
+  status: ProjectStatus;
+  repo_private: boolean;
+  for_sale: boolean;
+  price_label: string | null;
+  sale_note_pt: string | null;
+  sale_note_en: string | null;
+  challenge_pt: string | null;
+  challenge_en: string | null;
+  solution_pt: string | null;
+  solution_en: string | null;
+  results_pt: string | null;
+  results_en: string | null;
+  highlights_pt: string[];
+  highlights_en: string[];
+  gallery: GalleryItem[];
   created_at: string;
   updated_at: string;
+}
+
+/** Admin-only data of a project (private repository address, internal notes). */
+export interface ProjectPrivateRow {
+  project_id: string;
+  repo_url: string | null;
+  github_full_name: string | null;
+  internal_price: string | null;
+  notes: string | null;
 }
 
 export interface ExperienceRow {
@@ -48,6 +80,8 @@ export interface SettingsRow {
 
 export type LeadStatus = 'novo' | 'em_contato' | 'proposta' | 'fechado' | 'perdido';
 
+export type LeadIntent = 'contato' | 'compra' | 'demonstracao';
+
 export interface LeadRow {
   id: string;
   name: string;
@@ -58,6 +92,8 @@ export interface LeadRow {
   source: 'site' | 'whatsapp';
   status: LeadStatus;
   notes: string | null;
+  project_slug: string | null;
+  intent: LeadIntent;
   created_at: string;
 }
 
@@ -102,6 +138,16 @@ export interface Project {
   repoUrl: string | null;
   year: number | null;
   featured: boolean;
+  status: ProjectStatus;
+  repoPrivate: boolean;
+  forSale: boolean;
+  priceLabel: string | null;
+  saleNote: string | null;
+  challenge: string | null;
+  solution: string | null;
+  results: string | null;
+  highlights: string[];
+  gallery: { url: string; caption: string | null }[];
 }
 
 export interface Experience {

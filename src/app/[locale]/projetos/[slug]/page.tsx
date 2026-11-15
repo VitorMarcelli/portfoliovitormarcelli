@@ -2,7 +2,10 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { CSSProperties } from 'react';
+import ContactForm from '@/components/site/ContactForm';
+import ProjectBadges, { LockIcon } from '@/components/site/ProjectBadges';
 import ProjectCover from '@/components/site/ProjectCover';
+import ProjectGallery from '@/components/site/ProjectGallery';
 import RevealTitle from '@/components/site/RevealTitle';
 import TrackedLink from '@/components/site/TrackedLink';
 import { getDictionary, isLocale, localePath, locales } from '@/i18n/dictionaries';
@@ -21,6 +24,7 @@ export async function generateMetadata({ params }: PageProps<'/[locale]/projetos
   if (!isLocale(locale)) return {};
   const project = await getProject(slug, locale);
   if (!project) return {};
+  const image = project.coverUrl ?? project.gallery[0]?.url;
   return {
     title: project.title,
     description: project.summary,
@@ -28,9 +32,17 @@ export async function generateMetadata({ params }: PageProps<'/[locale]/projetos
       canonical: localePath(locale, `/projetos/${slug}`),
       languages: { 'pt-BR': `/projetos/${slug}`, en: `/en/projetos/${slug}` },
     },
-    openGraph: { title: project.title, description: project.summary, images: project.coverUrl ? [project.coverUrl] : undefined },
+    openGraph: { title: project.title, description: project.summary, images: image ? [image] : undefined },
   };
 }
+
+const paragraphsOf = (text: string | null) =>
+  (text ?? '')
+    .split(/\n{2,}/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+const reveal = (ms: number) => ({ '--reveal-delay': `${ms}ms` }) as CSSProperties;
 
 export default async function ProjectPage({ params }: PageProps<'/[locale]/projetos/[slug]'>) {
   const { locale, slug } = await params;
@@ -38,7 +50,16 @@ export default async function ProjectPage({ params }: PageProps<'/[locale]/proje
   const project = await getProject(slug, locale);
   if (!project) notFound();
   const t = getDictionary(locale);
-  const paragraphs = (project.body || project.summary).split(/\n{2,}/).map((p) => p.trim()).filter(Boolean);
+  const tp = t.projects;
+
+  // Structured case (challenge / solution / results) when filled in the panel; otherwise the free text.
+  const structured = [
+    { title: tp.challenge, text: project.challenge },
+    { title: tp.solution, text: project.solution },
+    { title: tp.results, text: project.results },
+  ].filter((part) => part.text);
+  const fallback = paragraphsOf(project.body || project.summary);
+  const primaryIntent = project.forSale ? 'compra' : 'demonstracao';
 
   return (
     <article
@@ -48,21 +69,43 @@ export default async function ProjectPage({ params }: PageProps<'/[locale]/proje
       data-scene-scale="0.4"
     >
       <Link href={`${localePath(locale)}#projetos`} className="text-sm text-muted transition-colors hover:text-accent-text">
-        ← {t.projects.back}
+        ← {tp.back}
       </Link>
 
       <header className="mt-8 max-w-4xl">
         <p data-reveal className="text-sm text-accent-text">
-          {project.category}
+          {[project.category, project.year].filter(Boolean).join(', ')}
         </p>
         <RevealTitle
           as="h1"
           text={project.title}
           className="night-gradient mt-2 font-display text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl"
         />
-        <p data-reveal className="mt-6 text-xl leading-relaxed text-muted sm:text-2xl" style={{ '--reveal-delay': '250ms' } as CSSProperties}>
+        <div data-reveal className="mt-5" style={reveal(150)}>
+          <ProjectBadges project={project} t={tp} />
+        </div>
+        <p data-reveal className="mt-6 text-xl leading-relaxed text-muted sm:text-2xl" style={reveal(250)}>
           {project.summary}
         </p>
+        <div data-reveal className="mt-8 flex flex-wrap gap-3" style={reveal(350)}>
+          <a
+            href="#interesse"
+            className="inline-flex items-center rounded-full bg-accent px-6 py-3 font-medium text-accent-fg shadow-[0_10px_30px_-12px_var(--glow)] transition-opacity hover:opacity-90"
+          >
+            {project.forSale ? tp.buyCta : tp.demoCta}
+          </a>
+          {project.liveUrl && (
+            <TrackedLink
+              event={`project_live:${project.slug}`}
+              href={project.liveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center rounded-full border border-border px-6 py-3 font-medium transition-colors hover:border-accent hover:text-accent-text"
+            >
+              {tp.viewLive}
+            </TrackedLink>
+          )}
+        </div>
       </header>
 
       {project.coverUrl && (
@@ -72,15 +115,45 @@ export default async function ProjectPage({ params }: PageProps<'/[locale]/proje
       )}
 
       <div className="mt-12 grid gap-6 lg:grid-cols-12">
-        <div data-reveal className="glow-card prose-case p-7 text-lg leading-relaxed sm:p-10 lg:col-span-8">
-          {paragraphs.map((p, i) => (
-            <p key={i}>{p}</p>
-          ))}
+        <div className="flex flex-col gap-6 lg:col-span-8">
+          {structured.length > 0 ? (
+            structured.map((part, i) => (
+              <section key={part.title} data-reveal style={reveal(i * 100)} className="glow-card p-7 sm:p-9">
+                <h2 className="font-display text-2xl font-semibold">{part.title}</h2>
+                <div className="prose-case mt-4 text-lg leading-relaxed text-muted">
+                  {paragraphsOf(part.text).map((p, j) => (
+                    <p key={j}>{p}</p>
+                  ))}
+                </div>
+              </section>
+            ))
+          ) : (
+            <div data-reveal className="glow-card prose-case p-7 text-lg leading-relaxed sm:p-10">
+              {fallback.map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
+            </div>
+          )}
+
+          {project.highlights.length > 0 && (
+            <section data-reveal className="glow-card p-7 sm:p-9">
+              <h2 className="font-display text-2xl font-semibold">{tp.highlights}</h2>
+              <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+                {project.highlights.map((item) => (
+                  <li key={item} className="flex gap-3 leading-relaxed">
+                    <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-accent shadow-[0_0_12px_var(--glow)]" aria-hidden="true" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </div>
+
         <aside className="flex flex-col gap-6 lg:col-span-4">
-          <dl data-reveal className="glow-card divide-y divide-border px-7" style={{ '--reveal-delay': '120ms' } as CSSProperties}>
+          <dl data-reveal className="glow-card divide-y divide-border px-7" style={reveal(120)}>
             <div className="py-5">
-              <dt className="text-sm text-muted">{t.projects.stack}</dt>
+              <dt className="text-sm text-muted">{tp.stack}</dt>
               <dd className="mt-3 flex flex-wrap gap-2">
                 {project.technologies.map((tech) => (
                   <span key={tech} className="rounded-full border border-border px-3 py-1 text-sm text-muted">
@@ -91,39 +164,94 @@ export default async function ProjectPage({ params }: PageProps<'/[locale]/proje
             </div>
             {project.year && (
               <div className="py-5">
-                <dt className="text-sm text-muted">{t.projects.year}</dt>
+                <dt className="text-sm text-muted">{tp.year}</dt>
                 <dd className="mt-1">{project.year}</dd>
               </div>
             )}
-            {(project.liveUrl || project.repoUrl) && (
-              <div className="py-5">
-                <dt className="text-sm text-muted">{t.projects.links}</dt>
-                <dd className="mt-1 flex flex-col gap-1 font-medium">
-                  {project.liveUrl && (
-                    <TrackedLink event={`project_live:${project.slug}`} href={project.liveUrl} target="_blank" rel="noopener noreferrer" className="text-accent-text underline underline-offset-4">
-                      {t.projects.viewLive}
+            <div className="py-5">
+              <dt className="text-sm text-muted">{tp.links}</dt>
+              <dd className="mt-1 flex flex-col gap-2 font-medium">
+                {project.liveUrl && (
+                  <TrackedLink
+                    event={`project_live:${project.slug}`}
+                    href={project.liveUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-accent-text underline underline-offset-4"
+                  >
+                    {tp.viewLive}
+                  </TrackedLink>
+                )}
+                {project.repoPrivate ? (
+                  <span className="inline-flex items-start gap-2 font-normal text-muted">
+                    <span className="mt-1">
+                      <LockIcon />
+                    </span>
+                    {tp.privateCodeHint}
+                  </span>
+                ) : (
+                  project.repoUrl && (
+                    <TrackedLink
+                      event={`project_repo:${project.slug}`}
+                      href={project.repoUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent-text underline underline-offset-4"
+                    >
+                      {tp.viewCode}
                     </TrackedLink>
-                  )}
-                  {project.repoUrl && (
-                    <TrackedLink event={`project_repo:${project.slug}`} href={project.repoUrl} target="_blank" rel="noopener noreferrer" className="text-accent-text underline underline-offset-4">
-                      {t.projects.viewCode}
-                    </TrackedLink>
-                  )}
-                </dd>
-              </div>
-            )}
+                  )
+                )}
+              </dd>
+            </div>
           </dl>
-          <div data-reveal className="glow-card p-7" style={{ '--reveal-delay': '240ms' } as CSSProperties}>
-            <p className="font-display text-xl font-semibold">{t.projects.talkCta}</p>
-            <Link
-              href={`${localePath(locale)}#contato`}
-              className="mt-5 inline-flex rounded-full bg-accent px-6 py-3 font-medium text-accent-fg shadow-[0_10px_30px_-12px_var(--glow)] transition-opacity hover:opacity-90"
-            >
-              {t.nav.contact}
-            </Link>
-          </div>
+
+          {project.forSale && (
+            <div data-reveal className="glow-card p-7" style={reveal(200)}>
+              <p className="text-sm text-accent-text">{tp.forSale}</p>
+              <p className="mt-2 font-display text-3xl font-bold">{project.priceLabel || tp.priceOnRequest}</p>
+              {project.saleNote && <p className="mt-3 leading-relaxed text-muted">{project.saleNote}</p>}
+              <a
+                href="#interesse"
+                className="mt-5 inline-flex rounded-full bg-accent px-6 py-3 font-medium text-accent-fg shadow-[0_10px_30px_-12px_var(--glow)] transition-opacity hover:opacity-90"
+              >
+                {tp.buyCta}
+              </a>
+            </div>
+          )}
         </aside>
       </div>
+
+      {project.gallery.length > 0 && (
+        <section className="mt-16" aria-labelledby="galeria-titulo">
+          <h2 id="galeria-titulo" data-reveal className="mb-6 font-display text-3xl font-semibold">
+            {tp.gallery}
+          </h2>
+          <ProjectGallery
+            title={project.title}
+            images={project.gallery}
+            labels={{ open: tp.galleryOpen, close: tp.galleryClose, prev: tp.galleryPrev, next: tp.galleryNext }}
+          />
+        </section>
+      )}
+
+      <section id="interesse" className="mt-16 scroll-mt-10" aria-labelledby="interesse-titulo">
+        <div data-reveal className="glow-card grid gap-8 p-7 sm:p-10 lg:grid-cols-12">
+          <div className="lg:col-span-4">
+            <h2 id="interesse-titulo" className="night-gradient font-display text-3xl font-bold leading-tight">
+              {tp.interestTitle}
+            </h2>
+            <p className="mt-4 leading-relaxed text-muted">{tp.interestText}</p>
+          </div>
+          <div className="lg:col-span-8">
+            <ContactForm
+              t={t.contact.form}
+              project={{ slug: project.slug, title: project.title, forSale: project.forSale }}
+              defaultIntent={primaryIntent}
+            />
+          </div>
+        </div>
+      </section>
     </article>
   );
 }

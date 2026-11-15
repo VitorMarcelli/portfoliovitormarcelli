@@ -3,7 +3,9 @@ import { notFound } from 'next/navigation';
 import type { CSSProperties, ReactNode } from 'react';
 import ContactForm from '@/components/site/ContactForm';
 import HomeHero from '@/components/site/HomeHero';
+import ProjectBadges, { LockIcon } from '@/components/site/ProjectBadges';
 import ProjectCover from '@/components/site/ProjectCover';
+import ProjectFilter, { type FilterItem } from '@/components/site/ProjectFilter';
 import RevealTitle from '@/components/site/RevealTitle';
 import TrackedLink from '@/components/site/TrackedLink';
 import WelcomeLoader from '@/components/site/WelcomeLoader';
@@ -107,16 +109,23 @@ function ProjectLinks({ project, t }: { project: Project; t: Dictionary }) {
           {t.projects.viewLive}
         </TrackedLink>
       )}
-      {project.repoUrl && (
-        <TrackedLink
-          event={`project_repo:${project.slug}`}
-          href={project.repoUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="underline decoration-border underline-offset-4 hover:decoration-accent-text"
-        >
-          {t.projects.viewCode}
-        </TrackedLink>
+      {project.repoPrivate ? (
+        <span className="inline-flex items-center gap-1.5 text-muted" title={t.projects.privateCodeHint}>
+          <LockIcon />
+          {t.projects.privateCode}
+        </span>
+      ) : (
+        project.repoUrl && (
+          <TrackedLink
+            event={`project_repo:${project.slug}`}
+            href={project.repoUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline decoration-border underline-offset-4 hover:decoration-accent-text"
+          >
+            {t.projects.viewCode}
+          </TrackedLink>
+        )
       )}
     </>
   );
@@ -137,78 +146,84 @@ function Chips({ items }: { items: string[] }) {
 /* ───────────────────────── Sections ───────────────────────── */
 
 function Projects({ t, locale, projects }: { t: Dictionary; locale: Locale; projects: Project[] }) {
-  const featured = projects.filter((p) => p.featured);
-  const others = projects.filter((p) => !p.featured);
+  let featuredIndex = 0;
+  const items: FilterItem[] = projects.map((project) => {
+    const caseHref = localePath(locale, `/projetos/${project.slug}`);
+    if (project.featured) {
+      const idx = featuredIndex++;
+      return {
+        key: project.slug,
+        category: project.category ?? '',
+        featured: true,
+        node: (
+          <article data-reveal className="glow-card grid gap-8 p-4 sm:p-6 lg:grid-cols-12 lg:items-center lg:gap-10">
+            <Link
+              href={caseHref}
+              className={`block lg:col-span-7 ${idx % 2 === 1 ? 'lg:order-2' : ''}`}
+              tabIndex={-1}
+              aria-hidden="true"
+            >
+              <ProjectCover project={project} priority={idx === 0} />
+            </Link>
+            <div className={`px-2 pb-2 lg:col-span-5 lg:px-0 lg:pb-0 ${idx % 2 === 1 ? 'lg:order-1' : ''}`}>
+              <p className="text-sm text-accent-text">{[project.category, project.year].filter(Boolean).join(', ')}</p>
+              <h3 className="mt-2 font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+                <Link href={caseHref} className="transition-colors hover:text-accent-text">
+                  {project.title}
+                </Link>
+              </h3>
+              <div className="mt-4">
+                <ProjectBadges project={project} t={t.projects} />
+              </div>
+              <p className="mt-4 text-lg leading-relaxed text-muted">{project.summary}</p>
+              <div className="mt-5">
+                <Chips items={project.technologies} />
+              </div>
+              <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 font-medium">
+                <Link href={caseHref} className="text-accent-text underline decoration-2 underline-offset-4">
+                  {t.projects.viewCase}
+                </Link>
+                <ProjectLinks project={project} t={t} />
+              </div>
+            </div>
+          </article>
+        ),
+      };
+    }
+    return {
+      key: project.slug,
+      category: project.category ?? '',
+      featured: false,
+      node: (
+        <article data-reveal className="glow-card flex w-full flex-col p-6 sm:p-7">
+          <p className="text-sm text-accent-text">{project.category}</p>
+          <h4 className="mt-2 font-display text-xl font-semibold">
+            <Link href={caseHref} className="transition-colors hover:text-accent-text">
+              {project.title}
+            </Link>
+          </h4>
+          <div className="mt-3">
+            <ProjectBadges project={project} t={t.projects} />
+          </div>
+          <p className="mt-3 flex-1 leading-relaxed text-muted">{project.summary}</p>
+          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-sm font-medium">
+            <Link href={caseHref} className="text-accent-text underline underline-offset-4">
+              {t.projects.viewCase}
+            </Link>
+            <ProjectLinks project={project} t={t} />
+          </div>
+        </article>
+      ),
+    };
+  });
 
   return (
     <NightSection id="projetos" labelledBy="projetos-titulo" scene={{ x: 0.62, scale: 0.42 }}>
       <SectionHeader id="projetos-titulo" title={t.projects.title} subtitle={t.projects.subtitle} />
-
-      {projects.length === 0 && <p className="text-lg text-muted">{t.projects.empty}</p>}
-
-      <div className="flex flex-col gap-8">
-        {featured.map((project, idx) => {
-          const caseHref = localePath(locale, `/projetos/${project.slug}`);
-          return (
-            <article key={project.slug} data-reveal className="glow-card grid gap-8 p-4 sm:p-6 lg:grid-cols-12 lg:items-center lg:gap-10">
-              <Link
-                href={caseHref}
-                className={`block lg:col-span-7 ${idx % 2 === 1 ? 'lg:order-2' : ''}`}
-                tabIndex={-1}
-                aria-hidden="true"
-              >
-                <ProjectCover project={project} priority={idx === 0} />
-              </Link>
-              <div className={`px-2 pb-2 lg:col-span-5 lg:px-0 lg:pb-0 ${idx % 2 === 1 ? 'lg:order-1' : ''}`}>
-                <p className="text-sm text-accent-text">{[project.category, project.year].filter(Boolean).join(', ')}</p>
-                <h3 className="mt-2 font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
-                  <Link href={caseHref} className="transition-colors hover:text-accent-text">
-                    {project.title}
-                  </Link>
-                </h3>
-                <p className="mt-4 text-lg leading-relaxed text-muted">{project.summary}</p>
-                <div className="mt-5">
-                  <Chips items={project.technologies} />
-                </div>
-                <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 font-medium">
-                  {project.body && (
-                    <Link href={caseHref} className="text-accent-text underline decoration-2 underline-offset-4">
-                      {t.projects.viewCase}
-                    </Link>
-                  )}
-                  <ProjectLinks project={project} t={t} />
-                </div>
-              </div>
-            </article>
-          );
-        })}
-      </div>
-
-      {others.length > 0 && (
-        <div className="mt-20">
-          <h3 data-reveal className="font-display text-2xl font-semibold">
-            {t.projects.more}
-          </h3>
-          <div className="mt-8 grid gap-6 md:grid-cols-2">
-            {others.map((project, i) => (
-              <article key={project.slug} data-reveal style={reveal((i % 2) * 120)} className="glow-card flex flex-col p-6 sm:p-7">
-                <p className="text-sm text-accent-text">{project.category}</p>
-                <h4 className="mt-2 font-display text-xl font-semibold">
-                  <Link href={localePath(locale, `/projetos/${project.slug}`)} className="transition-colors hover:text-accent-text">
-                    {project.title}
-                  </Link>
-                </h4>
-                <p className="mt-3 flex-1 leading-relaxed text-muted">{project.summary}</p>
-                <div className="mt-5 flex flex-wrap gap-x-5 gap-y-1 text-sm font-medium">
-                  <Link href={localePath(locale, `/projetos/${project.slug}`)} className="text-accent-text underline underline-offset-4">
-                    {t.projects.viewCase}
-                  </Link>
-                  <ProjectLinks project={project} t={t} />
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
+      {projects.length === 0 ? (
+        <p className="text-lg text-muted">{t.projects.empty}</p>
+      ) : (
+        <ProjectFilter items={items} allLabel={t.projects.filterAll} filterLabel={t.projects.filterLabel} moreTitle={t.projects.more} />
       )}
     </NightSection>
   );

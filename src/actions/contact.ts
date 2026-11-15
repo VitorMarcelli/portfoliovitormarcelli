@@ -1,6 +1,8 @@
 'use server';
 
+import { after } from 'next/server';
 import { z } from 'zod';
+import { sendLeadEmail } from '@/lib/notify';
 import { getSupabaseAdmin, hasSupabaseAdmin } from '@/lib/supabase/admin';
 
 export interface ContactState {
@@ -13,6 +15,8 @@ const schema = z.object({
   phone: z.string().trim().max(40).optional().or(z.literal('')),
   company: z.string().trim().max(120).optional().or(z.literal('')),
   message: z.string().trim().min(10).max(4000),
+  project: z.string().trim().max(80).optional().or(z.literal('')),
+  intent: z.enum(['contato', 'compra', 'demonstracao']).default('contato'),
 });
 
 export async function submitContact(_prev: ContactState, formData: FormData): Promise<ContactState> {
@@ -27,6 +31,8 @@ export async function submitContact(_prev: ContactState, formData: FormData): Pr
     phone: formData.get('phone') ?? '',
     company: formData.get('company') ?? '',
     message: formData.get('message'),
+    project: formData.get('project') ?? '',
+    intent: formData.get('intent') || 'contato',
   });
   if (!parsed.success) return { status: 'invalid' };
   if (!hasSupabaseAdmin()) return { status: 'error' };
@@ -42,17 +48,39 @@ export async function submitContact(_prev: ContactState, formData: FormData): Pr
     .gte('created_at', since);
   if ((count ?? 0) >= 3) return { status: 'success' };
 
-  const { error } = await supabase.from('leads').insert({
+  // Only accept a project that is really published (the slug comes from the browser).
+  let projectSlug: string | null = null;
+  let projectTitle: string | null = null;
+  if (parsed.data.project) {
+    const { data: project } = await supabase
+      .from('projects')
+      .select('slug, title_pt')
+      .eq('slug', parsed.data.project)
+      .eq('published', true)
+      .maybeSingle();
+    if (project) {
+      projectSlug = project.slug;
+      projectTitle = project.title_pt;
+    }
+  }
+  const intent = projectSlug ? parsed.data.intent : 'contato';
+
+  const lead = {
     name: parsed.data.name,
     email,
     phone: parsed.data.phone || null,
     company: parsed.data.company || null,
     message: parsed.data.message,
-    source: 'site',
-  });
+    source: 'site' as const,
+    project_slug: projectSlug,
+    intent,
+  };
+  const { error } = await supabase.from('leads').insert(lead);
   if (error) {
     console.error('[contact] insert failed', error.message);
     return { status: 'error' };
   }
+
+  after(() => sendLeadEmail({ ...lead, projectTitle }));
   return { status: 'success' };
 }

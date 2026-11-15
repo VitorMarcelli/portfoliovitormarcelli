@@ -25,6 +25,16 @@ export function localizeProject(row: ProjectRow, locale: Locale): Project {
     repoUrl: row.repo_url,
     year: row.year,
     featured: row.featured,
+    status: row.status ?? 'completed',
+    repoPrivate: row.repo_private ?? false,
+    forSale: row.for_sale ?? false,
+    priceLabel: row.price_label,
+    saleNote: (en && row.sale_note_en) || row.sale_note_pt,
+    challenge: (en && row.challenge_en) || row.challenge_pt,
+    solution: (en && row.solution_en) || row.solution_pt,
+    results: (en && row.results_en) || row.results_pt,
+    highlights: (en && row.highlights_en?.length ? row.highlights_en : row.highlights_pt) ?? [],
+    gallery: (row.gallery ?? []).map((g) => ({ url: g.url, caption: ((en && g.caption_en) || g.caption_pt) ?? null })),
   };
 }
 

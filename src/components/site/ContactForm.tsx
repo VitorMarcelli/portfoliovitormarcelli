@@ -8,9 +8,19 @@ import { track } from './Tracker';
 const fieldClass =
   'mt-2 block w-full rounded-md border border-border bg-surface px-3.5 py-3 text-base text-foreground placeholder:text-muted/70 focus:border-foreground focus:outline-none';
 
-export default function ContactForm({ t }: { t: Dictionary['contact']['form'] }) {
+type Intent = 'contato' | 'compra' | 'demonstracao';
+
+interface ContactFormProps {
+  t: Dictionary['contact']['form'];
+  /** When shown on a project page, the lead is tied to it and the visitor picks an intent. */
+  project?: { slug: string; title: string; forSale: boolean };
+  defaultIntent?: Intent;
+}
+
+export default function ContactForm({ t, project, defaultIntent = 'contato' }: ContactFormProps) {
   const [state, action, pending] = useActionState<ContactState, FormData>(submitContact, { status: 'idle' });
   const [startedAt] = useState(() => Date.now());
+  const intents: Intent[] = project?.forSale ? ['compra', 'demonstracao', 'contato'] : ['demonstracao', 'contato'];
 
   if (state.status === 'success') {
     return (
@@ -21,8 +31,38 @@ export default function ContactForm({ t }: { t: Dictionary['contact']['form'] })
   }
 
   return (
-    <form action={action} onSubmit={() => track('click', 'contact_form')} className="grid gap-5 sm:grid-cols-2" noValidate={false}>
+    <form
+      action={action}
+      onSubmit={() => track('click', project ? `project_interest:${project.slug}` : 'contact_form')}
+      className="grid gap-5 sm:grid-cols-2"
+      noValidate={false}
+    >
       <input type="hidden" name="startedAt" value={startedAt} />
+      {project && (
+        <>
+          <input type="hidden" name="project" value={project.slug} />
+          <fieldset className="sm:col-span-2">
+            <legend className="text-sm font-medium">{t.intentLabel}</legend>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {intents.map((intent) => (
+                <label
+                  key={intent}
+                  className="cursor-pointer rounded-full border border-border px-4 py-2 text-sm text-muted transition-colors has-[:checked]:border-accent has-[:checked]:bg-accent has-[:checked]:text-accent-fg has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[var(--focus)]"
+                >
+                  <input
+                    type="radio"
+                    name="intent"
+                    value={intent}
+                    defaultChecked={intent === (intents.includes(defaultIntent) ? defaultIntent : intents[0])}
+                    className="sr-only"
+                  />
+                  {t.intents[intent]}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </>
+      )}
       <div className="hidden" aria-hidden="true">
         <label>
           Website
