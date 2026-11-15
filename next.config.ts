@@ -1,19 +1,33 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
-const isGithubPages = process.env.GITHUB_ACTIONS === "true";
-const repoName = "portfoliovitormarcelli";
-const basePath = isGithubPages ? `/${repoName}` : "";
+const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
+  ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname
+  : undefined;
 
 const nextConfig: NextConfig = {
-  output: "export",
-  trailingSlash: true,
-  images: {
-    unoptimized: true,
+  experimental: {
+    globalNotFound: true,
+    serverActions: {
+      bodySizeLimit: '8mb',
+    },
   },
-  basePath: basePath,
-  assetPrefix: basePath ? `${basePath}/` : "",
-  env: {
-    NEXT_PUBLIC_BASE_PATH: basePath,
+  images: {
+    remotePatterns: supabaseHost
+      ? [{ protocol: 'https', hostname: supabaseHost, pathname: '/storage/v1/object/public/**' }]
+      : [],
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+    ];
   },
 };
 

@@ -50,3 +50,18 @@ next-env.d.ts
 .idea/
 *.swp
 *.swo
+
+# local docs, planning and AI tooling (never committed)
+docs/
+CLAUDE.md
+AGENTS.md
+.claude/
+.cursor/
+.windsurf/
+.github/copilot-instructions.md
+*.prompt.md
+notes/
+
+# supabase local
+supabase/.temp/
+supabase/.branches/

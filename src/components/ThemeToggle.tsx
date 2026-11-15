@@ -1,70 +1,51 @@
 'use client';
 
-import { useTheme } from './ThemeProvider';
-import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 
-export default function ThemeToggle() {
-  const { theme, toggleTheme } = useTheme();
+interface ThemeToggleProps {
+  toLightLabel: string;
+  toDarkLabel: string;
+  className?: string;
+}
+
+export default function ThemeToggle({ toLightLabel, toDarkLabel, className = '' }: ThemeToggleProps) {
+  const [dark, setDark] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    setDark(document.documentElement.classList.contains('dark'));
+  }, []);
+
+  function toggle() {
+    const next = !document.documentElement.classList.contains('dark');
+    document.documentElement.classList.toggle('dark', next);
+    try {
+      localStorage.setItem('theme', next ? 'dark' : 'light');
+    } catch {
+      // storage unavailable: the choice lasts for this page view only
+    }
+    setDark(next);
+  }
+
+  const label = dark ? toLightLabel : toDarkLabel;
 
   return (
     <button
-      onClick={toggleTheme}
-      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-      className="relative flex h-8 w-8 items-center justify-center overflow-hidden transition-colors"
+      type="button"
+      onClick={toggle}
+      aria-label={label}
+      title={label}
+      className={`inline-flex h-10 w-10 items-center justify-center rounded-full text-current transition-colors hover:bg-surface-2 ${className}`}
     >
-      {/* Sun icon */}
-      <motion.svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        initial={false}
-        animate={{
-          scale: theme === 'light' ? 1 : 0,
-          rotate: theme === 'light' ? 0 : -90,
-          opacity: theme === 'light' ? 1 : 0,
-        }}
-        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute"
-      >
-        <circle cx="12" cy="12" r="5" />
-        <line x1="12" y1="1" x2="12" y2="3" />
-        <line x1="12" y1="21" x2="12" y2="23" />
-        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-        <line x1="1" y1="12" x2="3" y2="12" />
-        <line x1="21" y1="12" x2="23" y2="12" />
-        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-      </motion.svg>
-
-      {/* Moon icon */}
-      <motion.svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        initial={false}
-        animate={{
-          scale: theme === 'dark' ? 1 : 0,
-          rotate: theme === 'dark' ? 0 : 90,
-          opacity: theme === 'dark' ? 1 : 0,
-        }}
-        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute"
-      >
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-      </motion.svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        {dark ? (
+          <>
+            <circle cx="12" cy="12" r="4.5" />
+            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+          </>
+        ) : (
+          <path d="M20.5 14.1A8.5 8.5 0 0 1 9.9 3.5a8.5 8.5 0 1 0 10.6 10.6z" />
+        )}
+      </svg>
     </button>
   );
 }

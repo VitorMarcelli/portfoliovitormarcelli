@@ -1,275 +1,304 @@
-export type Locale = 'pt' | 'en';
+import type { Locale } from '@/lib/types';
 
-export interface Dictionary {
-  nav: {
-    work: string;
-    services: string;
-    stack: string;
-    contact: string;
-  };
-  hero: {
-    role: string;
-    manifesto: string;
-    status: string;
-    cta: string;
-  };
-  about: {
-    title: string;
-    paragraphs: [string, string, string];
-  };
-  services: {
-    title: string;
-    items: { title: string; description: string }[];
-  };
-  projects: {
-    title: string;
-    subtitle: string;
-    exploreCta: string;
-    otherWorks: string;
-    mediaPlaceholder: string;
-    featured: {
-      title: string;
-      shortDescription: string;
-    }[];
-    other: {
-      title: string;
-      shortDescription: string;
-    }[];
-  };
-  stack: {
-    title: string;
-    intro: string;
-    groups: { label: string }[];
-  };
-  differentials: {
-    title: string;
-    items: { title: string; description: string }[];
-  };
-  contact: {
-    title: string;
-    subtitle: string;
-  };
+export const locales: Locale[] = ['pt', 'en'];
+
+export function isLocale(value: string): value is Locale {
+  return value === 'pt' || value === 'en';
 }
 
-export const dictionaries: Record<Locale, Dictionary> = {
-  pt: {
-    nav: {
-      work: 'Projetos',
-      services: 'Serviços',
-      stack: 'Stack',
-      contact: 'Contato',
-    },
-    hero: {
-      role: 'Desenvolvedor Web Fullstack',
-      manifesto: 'Engenharia de software ponta a ponta. Construo sistemas complexos, integrações escaláveis e interfaces premium que resolvem problemas reais.',
-      status: 'Disponível para novos projetos',
-      cta: 'Ver Projetos',
-    },
-    about: {
-      title: 'Sobre Mim',
-      paragraphs: [
-        'Sou um Desenvolvedor Fullstack com foco em criar aplicações web robustas e sistemas sob medida. Minha base técnica rigorosa permite atuar com segurança desde a arquitetura de dados e APIs até ecossistemas de interfaces visuais premium.',
-        'Minha experiência principal envolve processos críticos de negócio: da automação pesada de sistemas fiscais governamentais (SEFAZ) à construção de plataformas web modernas de alta tração.',
-        'Para mim, código é ferramenta, não objetivo final. Eu desenvolvo sistemas com forte visão de produto, garantindo que arquiteturas de alta resiliência se traduzam em interfaces estéticas, rápidas e orientadas ao usuário real.',
-      ],
-    },
-    services: {
-      title: 'Expertise',
-      items: [
-        {
-          title: 'Engenharia Web Fullstack',
-          description: 'Desenvolvimento end-to-end usando stack moderna (React, Next.js, Node.js, TypeScript). Da modelagem do banco de dados ao deploy final.',
-        },
-        {
-          title: 'Sistemas & Integrações',
-          description: 'Automação de processos complexos, construção de APIs RESTful resilientes, web scraping governamental e orquestração de microsserviços.',
-        },
-        {
-          title: 'Interfaces Premium',
-          description: 'Tradução do design system para o código com excelência visual, performance "Lighthouse 100" e interações fluidas (Framer Motion).',
-        },
-        {
-          title: 'Engenharia Aplicada ao Produto',
-          description: 'Desenvolvimento orientado não apenas à completude funcional, mas à entrega de valor estratégico e validação de métricas do negócio.',
-        },
-      ],
-    },
-    projects: {
-      title: 'Projetos\nEm Destaque',
-      subtitle: 'Comprovações reais da interseção entre engenharia de software sólida e design de produto refinado na web.',
-      exploreCta: 'Explorar Projeto',
-      otherWorks: 'Repositórios & Ferramentas',
-      mediaPlaceholder: 'Visual Portfolio Asset',
-      featured: [
-        {
-          title: 'Automação Fiscal Cross-State',
-          shortDescription: 'Solução completa em Node.js/Playwright para automação de emissões SEFAZ com bypass de desafios antibot em escala de produção.',
-        },
-        {
-          title: 'Web App Premium & Identidade',
-          shortDescription: 'Experiência imersiva desenvolvida em Next.js 15, com arquitetura Server-First, i18n dinâmico e design system customizado.',
-        },
-      ],
-      other: [
-        {
-          title: 'SDK de Visão Computacional',
-          shortDescription: 'Módulo backend para integração com modelos avançados de visão estruturada e extração de dados via câmera web/mobile.',
-        },
-        {
-          title: 'Microserviço Fiscal REST',
-          shortDescription: 'API resiliente para geração, parseamento e disparo massivo de documentos PDF otimizados.',
-        },
-        {
-          title: 'Sistema de Agendamento IA',
-          shortDescription: 'POC exploratória de integração de fluxos naturais conversacionais e ferramentas autônomas.',
-        },
-      ],
-    },
-    stack: {
-      title: 'Base Técnica',
-      intro: 'A tecnologia ideal é a que resolve o problema da melhor forma. Este é o meu ecossistema principal de atuação para engenharia de produto.',
-      groups: [
-        { label: 'Frontend & UI' },
-        { label: 'Backend & APIs' },
-        { label: 'Dados & ORMs' },
-        { label: 'Automação B2B' },
-        { label: 'Deploy & DevOps' },
-      ],
-    },
-    differentials: {
-      title: 'Metodologia',
-      items: [
-        {
-          title: 'Ownership Total',
-          description: 'Mapeamento de domínio, arquitetura, design de banco, implementação fullstack e DevOps. Assumo a responsabilidade técnica completa.',
-        },
-        {
-          title: 'Alinhamento com Negócio',
-          description: 'Aplicações precisam ser viáveis financeiramente, escaláveis e estáveis. Código limpo é importante, mas o impacto comercial dita a prioridade.',
-        },
-        {
-          title: 'Profundidade antes de Hype',
-          description: 'Uso ferramentas sólidas que passaram pelo crivo do mercado. Foco em estabilidade, type-safety forte e robustez estrutural.',
-        },
-        {
-          title: 'Atenção Absoluta ao Detalhe',
-          description: 'O acabamento diferencia o produto amador da plataforma premium. Tolerância zero para falhas visuais de sub-pixel ou erros não tratados.',
-        },
-      ],
-    },
-    contact: {
-      title: 'Inicie um\nProjeto.',
-      subtitle: 'Precisa desenvolver um sistema web ou produto digital? Estou disponível para posições e consultorias técnicas.',
-    },
+/** Public path for a locale: Portuguese lives at the root, English under /en. */
+export function localePath(locale: Locale, path = '') {
+  const clean = path.startsWith('/') ? path : path ? `/${path}` : '';
+  return locale === 'pt' ? clean || '/' : `/en${clean}`;
+}
+
+const pt = {
+  meta: {
+    title: 'Vitor Marcelli | Desenvolvedor Full Stack',
+    description:
+      'Vitor Marcelli, desenvolvedor full stack. Sistemas web, automações fiscais, integrações com WhatsApp e IA para empresas.',
   },
-  en: {
-    nav: {
-      work: 'Projects',
-      services: 'Services',
-      stack: 'Stack',
-      contact: 'Contact',
+  nav: {
+    projects: 'Projetos',
+    services: 'Serviços',
+    experience: 'Trajetória',
+    contact: 'Contato',
+    menu: 'Abrir menu',
+    closeMenu: 'Fechar menu',
+    switchLanguage: 'English',
+    switchLanguageLabel: 'Ver o site em inglês',
+    themeToLight: 'Usar tema claro',
+    themeToDark: 'Usar tema escuro',
+    skip: 'Pular para o conteúdo',
+  },
+  hero: {
+    role: 'Desenvolvedor full stack',
+    manifesto:
+      'Construo sistemas web, automações e integrações que tiram trabalho manual da rotina de empresas: emissão de guias fiscais, atendimento por WhatsApp com IA, painéis de gestão.',
+    available: 'Aceitando novos projetos',
+    unavailable: 'Agenda cheia no momento',
+    primaryCta: 'Ver projetos',
+    whatsappCta: 'Conversar no WhatsApp',
+  },
+  about: {
+    title: 'Sobre',
+    paragraphs: [
+      'Sou desenvolvedor full stack e trabalho do banco de dados à interface. A maior parte dos meus projetos nasce de um processo que alguém faz à mão todo dia e que pode ser automatizado.',
+      'Tenho experiência com automação de portais da SEFAZ, sistemas multi-tenant, atendimento por WhatsApp com IA e integrações com ERPs e CRMs.',
+      'Antes de escrever código, entendo o processo e o que precisa mudar no negócio. Depois entrego o sistema funcionando, documentado e com alguém para dar suporte.',
+    ],
+  },
+  services: {
+    title: 'O que eu faço',
+    items: [
+      {
+        title: 'Sistemas web sob medida',
+        description: 'Painéis, CRMs e SaaS com React, Next.js, Node.js e PostgreSQL, do banco ao deploy.',
+      },
+      {
+        title: 'Automação de processos',
+        description: 'Robôs que operam portais, leem e-mails, geram PDFs e alimentam planilhas e ERPs sem intervenção manual.',
+      },
+      {
+        title: 'WhatsApp e IA no atendimento',
+        description: 'Atendimento automático que qualifica o cliente e passa a conversa para uma pessoa na hora certa.',
+      },
+      {
+        title: 'Integrações',
+        description: 'APIs REST, webhooks e conectores entre sistemas como Bitrix24, Google Workspace e ERPs.',
+      },
+    ],
+  },
+  projects: {
+    title: 'Projetos',
+    subtitle: 'Sistemas que construí, com código aberto no GitHub.',
+    viewCase: 'Ler o case',
+    viewLive: 'Abrir sistema',
+    viewCode: 'Ver código',
+    more: 'Outros projetos',
+    empty: 'Os projetos estão sendo atualizados. Volte em breve ou fale comigo.',
+    back: 'Todos os projetos',
+    stack: 'Tecnologias',
+    year: 'Ano',
+    links: 'Links',
+    talkCta: 'Quer algo parecido para a sua empresa?',
+  },
+  experience: {
+    title: 'Trajetória',
+    work: 'Experiência',
+    education: 'Formação',
+    present: 'atual',
+    downloadCv: 'Baixar currículo (PDF)',
+  },
+  stack: {
+    title: 'Ferramentas',
+    groups: [
+      { label: 'Interface', items: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS', 'React Native'] },
+      { label: 'Servidor', items: ['Node.js', 'NestJS', 'Python', 'FastAPI', 'REST e webhooks'] },
+      { label: 'Dados', items: ['PostgreSQL', 'Supabase', 'Prisma', 'Redis', 'MongoDB'] },
+      { label: 'Automação e IA', items: ['Playwright', 'Claude e OpenAI', 'Evolution API', 'BullMQ'] },
+      { label: 'Infra', items: ['Vercel', 'Docker', 'Linux', 'GitHub Actions'] },
+    ],
+  },
+  approach: {
+    title: 'Como eu trabalho',
+    items: [
+      {
+        title: 'Começo pelo processo',
+        description: 'Mapeio quem faz o quê hoje e quanto tempo isso custa, para saber o que o sistema precisa resolver.',
+      },
+      {
+        title: 'Entregas curtas',
+        description: 'Você acompanha versões funcionando desde as primeiras semanas, não só no final.',
+      },
+      {
+        title: 'Tecnologia comprovada',
+        description: 'Uso ferramentas maduras e tipagem forte, para o sistema continuar fácil de manter depois da entrega.',
+      },
+      {
+        title: 'Suporte depois do deploy',
+        description: 'Acompanho o sistema em produção e ajusto o que aparecer no uso real.',
+      },
+    ],
+  },
+  contact: {
+    title: 'Vamos conversar sobre o seu projeto',
+    subtitle:
+      'Conte o que você precisa. Respondo pelo WhatsApp ou por e-mail, e também estou aberto a vagas CLT ou PJ.',
+    whatsapp: 'Chamar no WhatsApp',
+    whatsappMessage: 'Olá Vitor, vi seu portfólio e gostaria de conversar sobre um projeto.',
+    or: 'ou envie uma mensagem',
+    form: {
+      name: 'Nome',
+      email: 'E-mail',
+      phone: 'WhatsApp',
+      phoneHint: 'Opcional',
+      company: 'Empresa',
+      companyHint: 'Opcional',
+      message: 'Como posso ajudar?',
+      submit: 'Enviar mensagem',
+      sending: 'Enviando…',
+      success: 'Mensagem enviada. Respondo em até um dia útil.',
+      error: 'Não foi possível enviar agora. Tente de novo ou me chame no WhatsApp.',
+      invalid: 'Preencha nome, e-mail válido e uma mensagem com pelo menos 10 caracteres.',
     },
-    hero: {
-      role: 'Fullstack Web Developer',
-      manifesto: 'End-to-end software engineering. I build complex systems, scalable integrations, and premium interfaces that solve real business problems.',
-      status: 'Available for new challenges',
-      cta: 'View Work',
-    },
-    about: {
-      title: 'About Me',
-      paragraphs: [
-        'I am a Fullstack Developer focused on creating robust web applications and bespoke systems. My rigorous technical foundation allows me to work confidently from data architectures and APIs to premium visual interface ecosystems.',
-        'My core experience involves critical business processes: from heavy automation of government tax systems (SEFAZ) to building modern, high-traction web platforms.',
-        'To me, code is a tool, not the ultimate goal. I develop systems with a strong product vision, ensuring that highly resilient architectures translate into aesthetic, snappy, and user-centric interfaces.',
-      ],
-    },
-    services: {
-      title: 'Expertise',
-      items: [
-        {
-          title: 'Fullstack Web Engineering',
-          description: 'End-to-end development using modern stacks (React, Next.js, Node.js, TypeScript). From database modeling to production deployment.',
-        },
-        {
-          title: 'Systems & Integrations',
-          description: 'Complex process automation, resilient RESTful APIs, high-stakes web scraping, and microservices orchestration.',
-        },
-        {
-          title: 'Premium Interfaces',
-          description: 'Translating design systems into code with visual excellence, "Lighthouse 100" performance, and fluid interactions.',
-        },
-        {
-          title: 'Product-Applied Engineering',
-          description: 'Development guided not only by functional completion, but by delivering strategic value and validating business metrics.',
-        },
-      ],
-    },
-    projects: {
-      title: 'Featured\nWork',
-      subtitle: 'Real proof of the intersection between solid software engineering and refined digital product design.',
-      exploreCta: 'Explore Project',
-      otherWorks: 'Repositories & Tooling',
-      mediaPlaceholder: 'Visual Portfolio Asset',
-      featured: [
-        {
-          title: 'Cross-State Tax Automation',
-          shortDescription: 'Complete Node.js/Playwright solution for automating tax issuances with production-scale anti-bot bypass capabilities.',
-        },
-        {
-          title: 'Premium Web App & Identity',
-          shortDescription: 'Immersive experience developed in Next.js 15, featuring a Server-First architecture, dynamic i18n, and a custom design system.',
-        },
-      ],
-      other: [
-        {
-          title: 'Computer Vision Backing SDK',
-          shortDescription: 'Backend module integrating advanced structured vision models and data extraction pipelines.',
-        },
-        {
-          title: 'REST Fiscal Microservice',
-          shortDescription: 'Resilient API engine for mass generation, parsing, and dispatching of optimized PDF documents.',
-        },
-        {
-          title: 'AI Scheduling System',
-          shortDescription: 'Exploratory POC integrating natural conversational flows with autonomous agentic tools.',
-        },
-      ],
-    },
-    stack: {
-      title: 'Technical Base',
-      intro: 'The ideal technology is the one that best solves the problem. This is my core ecosystem for product engineering.',
-      groups: [
-        { label: 'Frontend & UI' },
-        { label: 'Backend & APIs' },
-        { label: 'Data & ORMs' },
-        { label: 'B2B Automation' },
-        { label: 'Deploy & DevOps' },
-      ],
-    },
-    differentials: {
-      title: 'Methodology',
-      items: [
-        {
-          title: 'Total Ownership',
-          description: 'Domain mapping, architecture, DB design, fullstack implementation, and DevOps. I take full technical responsibility over the lifecycle.',
-        },
-        {
-          title: 'Business Alignment',
-          description: 'Applications must be financially viable and stable. Clean code is important, but commercial impact dictates priority.',
-        },
-        {
-          title: 'Depth Over Hype',
-          description: 'I use solid tools that have passed the market test. Absolute focus on stability, strong type-safety, and structural robustness.',
-        },
-        {
-          title: 'Ruthless Attention to Detail',
-          description: 'Finishing touches separate amateur products from premium platforms. Zero tolerance for visual sub-pixel flaws or unhandled errors.',
-        },
-      ],
-    },
-    contact: {
-      title: 'Start a\nProject.',
-      subtitle: 'Need to engineer a web system or digital product? I am currently open for technical roles and consulting.',
-    },
+    channels: 'Outros canais',
+  },
+  footer: {
+    rights: 'Todos os direitos reservados.',
+    admin: 'Área restrita',
+  },
+  notFound: {
+    title: 'Página não encontrada',
+    back: 'Voltar ao início',
   },
 };
+
+export type Dictionary = typeof pt;
+
+const en: Dictionary = {
+  meta: {
+    title: 'Vitor Marcelli | Full Stack Developer',
+    description:
+      'Vitor Marcelli, full stack developer. Web systems, tax automation, WhatsApp and AI integrations for businesses.',
+  },
+  nav: {
+    projects: 'Projects',
+    services: 'Services',
+    experience: 'Background',
+    contact: 'Contact',
+    menu: 'Open menu',
+    closeMenu: 'Close menu',
+    switchLanguage: 'Português',
+    switchLanguageLabel: 'View the site in Portuguese',
+    themeToLight: 'Use light theme',
+    themeToDark: 'Use dark theme',
+    skip: 'Skip to content',
+  },
+  hero: {
+    role: 'Full stack developer',
+    manifesto:
+      'I build web systems, automations and integrations that take manual work off a company’s plate: tax slip issuing, WhatsApp support with AI, management dashboards.',
+    available: 'Taking on new projects',
+    unavailable: 'Fully booked right now',
+    primaryCta: 'See projects',
+    whatsappCta: 'Chat on WhatsApp',
+  },
+  about: {
+    title: 'About',
+    paragraphs: [
+      'I am a full stack developer working from the database to the interface. Most of my projects start with a process someone does by hand every day that can be automated.',
+      'I have hands-on experience automating Brazilian tax portals (SEFAZ), multi-tenant systems, WhatsApp support with AI, and ERP and CRM integrations.',
+      'Before writing code I learn the process and what needs to change in the business. Then I ship the system working, documented and supported.',
+    ],
+  },
+  services: {
+    title: 'What I do',
+    items: [
+      {
+        title: 'Custom web systems',
+        description: 'Dashboards, CRMs and SaaS with React, Next.js, Node.js and PostgreSQL, from database to deploy.',
+      },
+      {
+        title: 'Process automation',
+        description: 'Bots that operate portals, read emails, generate PDFs and feed spreadsheets and ERPs with no manual steps.',
+      },
+      {
+        title: 'WhatsApp and AI support',
+        description: 'Automated support that qualifies the customer and hands the chat to a person at the right moment.',
+      },
+      {
+        title: 'Integrations',
+        description: 'REST APIs, webhooks and connectors between systems such as Bitrix24, Google Workspace and ERPs.',
+      },
+    ],
+  },
+  projects: {
+    title: 'Projects',
+    subtitle: 'Systems I built, with open source code on GitHub.',
+    viewCase: 'Read the case',
+    viewLive: 'Open app',
+    viewCode: 'View code',
+    more: 'More projects',
+    empty: 'Projects are being updated. Check back soon or get in touch.',
+    back: 'All projects',
+    stack: 'Technologies',
+    year: 'Year',
+    links: 'Links',
+    talkCta: 'Want something similar for your company?',
+  },
+  experience: {
+    title: 'Background',
+    work: 'Experience',
+    education: 'Education',
+    present: 'present',
+    downloadCv: 'Download résumé (PDF)',
+  },
+  stack: {
+    title: 'Tools',
+    groups: [
+      { label: 'Interface', items: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS', 'React Native'] },
+      { label: 'Server', items: ['Node.js', 'NestJS', 'Python', 'FastAPI', 'REST and webhooks'] },
+      { label: 'Data', items: ['PostgreSQL', 'Supabase', 'Prisma', 'Redis', 'MongoDB'] },
+      { label: 'Automation and AI', items: ['Playwright', 'Claude and OpenAI', 'Evolution API', 'BullMQ'] },
+      { label: 'Infra', items: ['Vercel', 'Docker', 'Linux', 'GitHub Actions'] },
+    ],
+  },
+  approach: {
+    title: 'How I work',
+    items: [
+      {
+        title: 'Process first',
+        description: 'I map who does what today and what it costs, so the system solves the right problem.',
+      },
+      {
+        title: 'Short iterations',
+        description: 'You see working versions from the first weeks, not only at the end.',
+      },
+      {
+        title: 'Proven technology',
+        description: 'Mature tools and strong typing, so the system stays easy to maintain after handover.',
+      },
+      {
+        title: 'Support after launch',
+        description: 'I watch the system in production and adjust whatever shows up in real use.',
+      },
+    ],
+  },
+  contact: {
+    title: 'Let’s talk about your project',
+    subtitle: 'Tell me what you need. I reply on WhatsApp or by email, and I am also open to full-time roles.',
+    whatsapp: 'Message me on WhatsApp',
+    whatsappMessage: 'Hi Vitor, I saw your portfolio and would like to talk about a project.',
+    or: 'or send a message',
+    form: {
+      name: 'Name',
+      email: 'Email',
+      phone: 'WhatsApp',
+      phoneHint: 'Optional',
+      company: 'Company',
+      companyHint: 'Optional',
+      message: 'How can I help?',
+      submit: 'Send message',
+      sending: 'Sending…',
+      success: 'Message sent. I reply within one business day.',
+      error: 'Could not send right now. Try again or message me on WhatsApp.',
+      invalid: 'Fill in your name, a valid email and a message of at least 10 characters.',
+    },
+    channels: 'Other channels',
+  },
+  footer: {
+    rights: 'All rights reserved.',
+    admin: 'Admin',
+  },
+  notFound: {
+    title: 'Page not found',
+    back: 'Back to home',
+  },
+};
+
+export const dictionaries: Record<Locale, Dictionary> = { pt, en };
+
+export function getDictionary(locale: Locale): Dictionary {
+  return dictionaries[locale];
+}
