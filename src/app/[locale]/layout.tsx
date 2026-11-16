@@ -22,9 +22,10 @@ export function generateStaticParams() {
 }
 
 export const viewport: Viewport = {
+  viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f4f5f1' },
-    { media: '(prefers-color-scheme: dark)', color: '#0f1b2d' },
+    { media: '(prefers-color-scheme: light)', color: '#f1f5f9' },
+    { media: '(prefers-color-scheme: dark)', color: '#050a18' },
   ],
 };
 

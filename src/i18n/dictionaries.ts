@@ -178,6 +178,9 @@ const pt = {
     whatsapp: 'WhatsApp',
     email: 'E-mail',
     theme: 'Tema',
+    more: 'Mais',
+    moreTitle: 'Links e preferências',
+    close: 'Fechar',
   },
   footer: {
     rights: 'Todos os direitos reservados.',
@@ -356,6 +359,9 @@ const en: Dictionary = {
     whatsapp: 'WhatsApp',
     email: 'Email',
     theme: 'Theme',
+    more: 'More',
+    moreTitle: 'Links & preferences',
+    close: 'Close',
   },
   footer: {
     rights: 'All rights reserved.',
