@@ -86,7 +86,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
         >
           {t.nav.skip}
         </a>
-        <main id="conteudo">{children}</main>
+        <main id="conteudo" className="overflow-x-clip">{children}</main>
         <SiteFooter locale={locale} t={t} />
         <SiteDock
           locale={locale}
