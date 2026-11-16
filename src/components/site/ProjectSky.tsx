@@ -20,9 +20,24 @@ interface ProjectSkyProps {
 }
 
 const SIZE = 1000;
-const ZOOM = 700;
-/** The active star sits left of center (right of center near the edge) so its name fits beside it. */
-const LABEL_ROOM = 150;
+/** Smallest camera window; a lone star is framed with this much sky around it. */
+const MIN_SPAN = 540;
+/** Room the names need beside the stars (they wrap at about 18 characters). */
+const LABEL_PAD = 200;
+
+/** Splits a name into lines of about 18 characters, so labels stay compact inside the frame. */
+function wrapLabel(text: string, max = 18) {
+  const lines: string[] = [];
+  let line = '';
+  for (const word of text.split(' ')) {
+    if (line && (line + ' ' + word).length > max) {
+      lines.push(line);
+      line = word;
+    } else line = line ? `${line} ${word}` : word;
+  }
+  if (line) lines.push(line);
+  return lines.slice(0, 3);
+}
 const OVERVIEW = `0 0 ${SIZE} ${SIZE}`;
 /**
  * Where each category's constellation sits in the sky (in a 1000 × 1000 box): a hexagon around the
@@ -147,8 +162,21 @@ export default function ProjectSky({ stars, articles, hint, label }: ProjectSkyP
   }, []);
 
   const current = all.find((s) => s.slug === active) ?? null;
-  const focusX = current ? current.x + (current.x > 760 ? -LABEL_ROOM : LABEL_ROOM) : 0;
-  const viewBox = current ? `${focusX - ZOOM / 2} ${current.y - ZOOM / 2} ${ZOOM} ${ZOOM}` : OVERVIEW;
+  // The camera frames the whole constellation being visited (stars, names and its title), not one star.
+  const currentCluster = current ? clusters.find((c) => c.stars.some((s) => s.slug === current.slug)) ?? null : null;
+  let viewBox = OVERVIEW;
+  if (currentCluster) {
+    const xs = currentCluster.stars.map((s) => s.x);
+    const ys = currentCluster.stars.map((s) => s.y);
+    const minX = Math.min(...xs) - LABEL_PAD;
+    const maxX = Math.max(...xs) + LABEL_PAD;
+    const minY = Math.min(currentCluster.labelY - 40, ...ys.map((y) => y - 60));
+    const maxY = Math.max(...ys) + 90;
+    const span = Math.max(MIN_SPAN, maxX - minX, maxY - minY);
+    const cx = (minX + maxX) / 2;
+    const cy = (minY + maxY) / 2;
+    viewBox = `${Math.round(cx - span / 2)} ${Math.round(cy - span / 2)} ${Math.round(span)} ${Math.round(span)}`;
+  }
 
   function travel(slug: string) {
     const target = document.getElementById(`projeto-${slug}`);
@@ -176,7 +204,7 @@ export default function ProjectSky({ stars, articles, hint, label }: ProjectSkyP
             initial={false}
             animate={{ viewBox }}
             transition={{ duration: 1.3, ease: [0.65, 0, 0.35, 1] }}
-            preserveAspectRatio="xMidYMid slice"
+            preserveAspectRatio="xMidYMid meet"
             className="absolute inset-0 h-full w-full"
           >
             <defs>
@@ -243,7 +271,12 @@ export default function ProjectSky({ stars, articles, hint, label }: ProjectSkyP
 
                   {cluster.stars.map((star) => {
                     const isActive = star.slug === active;
-                    const anchorEnd = star.x > 760;
+                    // Names point outward from the constellation, so they never cross its lines.
+                    const anchorEnd = star.x < cluster.labelX - 5;
+                    const fontSize = isActive ? 22 : 18;
+                    const lines = wrapLabel(star.title.split(',')[0]);
+                    const lineHeight = fontSize * 1.15;
+                    const labelX = anchorEnd ? -(star.r + 12) : star.r + 12;
                     return (
                       <g
                         key={star.slug}
@@ -267,19 +300,23 @@ export default function ProjectSky({ stars, articles, hint, label }: ProjectSkyP
                         )}
                         <circle r={isActive ? star.r * 1.25 : star.r} fill="var(--star-core)" stroke="transparent" strokeWidth={3} />
                         <text
-                          x={anchorEnd ? -(star.r + 12) : star.r + 12}
-                          y={5}
+                          x={labelX}
+                          y={6 - ((lines.length - 1) * lineHeight) / 2}
                           textAnchor={anchorEnd ? 'end' : 'start'}
                           fill="var(--foreground)"
-                          fontSize={isActive ? 22 : 17}
+                          fontSize={fontSize}
                           fontWeight={isActive ? 600 : 400}
                           // Names only in the constellation being visited: with many stars, every
                           // label at once turns into overlapping text.
                           opacity={isActive ? 1 : lit ? 0.75 : 0}
                           style={{ transition: 'all 0.6s', fontFamily: 'var(--font-display)' }}
                         >
-                          {/* Short name in the sky ("Giro, PDV para adegas" → "Giro"); the card has the full title. */}
-                          {star.title.split(',')[0]}
+                          {/* Short name in the sky ("Giro, PDV para adegas" → "Giro"), wrapped; the card has the full title. */}
+                          {lines.map((line, i) => (
+                            <tspan key={i} x={labelX} dy={i === 0 ? 0 : lineHeight}>
+                              {line}
+                            </tspan>
+                          ))}
                         </text>
                       </g>
                     );
