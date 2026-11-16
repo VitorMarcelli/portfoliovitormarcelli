@@ -4,6 +4,8 @@ import { PageHeader, Panel } from '@/components/admin/ui';
 import { isAiConfigured } from '@/lib/ai/attendant';
 import { requireAdmin } from '@/lib/auth';
 import { SITE_URL } from '@/lib/env';
+import { hasGithubToken } from '@/lib/github';
+import { isLeadEmailConfigured } from '@/lib/notify';
 import type { SettingsRow } from '@/lib/types';
 import { getConnectionState, isEvolutionConfigured } from '@/lib/whatsapp/evolution';
 
@@ -30,6 +32,9 @@ export default async function SettingsPage() {
     { label: 'Evolution API', ok: isEvolutionConfigured(), env: 'EVOLUTION_API_URL, EVOLUTION_API_KEY, EVOLUTION_INSTANCE' },
     { label: 'Segredo do webhook', ok: Boolean(process.env.WHATSAPP_WEBHOOK_SECRET), env: 'WHATSAPP_WEBHOOK_SECRET' },
     { label: 'Aviso de transferência no seu celular', ok: Boolean(process.env.NOTIFY_WHATSAPP_NUMBER), env: 'NOTIFY_WHATSAPP_NUMBER (opcional)' },
+    { label: 'E-mail de aviso de novo lead (Resend)', ok: isLeadEmailConfigured(), env: 'RESEND_API_KEY' },
+    { label: 'Importar repositórios privados do GitHub', ok: hasGithubToken(), env: 'GITHUB_TOKEN' },
+    { label: 'Capturas automáticas sem limite diário', ok: Boolean(process.env.MICROLINK_API_KEY), env: 'MICROLINK_API_KEY (opcional)' },
   ];
 
   return (

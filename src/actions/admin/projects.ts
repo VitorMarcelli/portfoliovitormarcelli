@@ -3,16 +3,21 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { requireAdmin } from '@/lib/auth';
+import { listRepos, titleFromRepoName } from '@/lib/github';
+import { captureScreenshot } from '@/lib/screenshot';
+import type { GalleryItem, ProjectRow, ProjectStatus } from '@/lib/types';
 import { revalidatePublicSite, text, uploadPublicFile } from './shared';
 
 export interface ProjectFormState {
   error?: string;
 }
 
+const STATUSES: ProjectStatus[] = ['live', 'mvp', 'in_progress', 'completed'];
+
 function slugify(value: string) {
   return value
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+    .replace(/\p{Diacritic}/gu, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
@@ -27,6 +32,15 @@ function validUrl(value: string | null) {
   } catch {
     return null;
   }
+}
+
+/** One item per line, blank lines ignored. */
+function lines(formData: FormData, key: string) {
+  return (text(formData, key) || '')
+    .split('\n')
+    .map((l) => l.replace(/^[-•*]\s*/, '').trim())
+    .filter(Boolean)
+    .slice(0, 12);
 }
 
 export async function saveProject(_prev: ProjectFormState, formData: FormData): Promise<ProjectFormState> {
@@ -45,6 +59,9 @@ export async function saveProject(_prev: ProjectFormState, formData: FormData): 
   const repoUrl = validUrl(repoRaw);
   if ((liveRaw && !liveUrl) || (repoRaw && !repoUrl)) return { error: 'Os links precisam começar com https://' };
 
+  const repoPrivate = formData.get('repo_private') === 'private';
+  const statusRaw = text(formData, 'status') as ProjectStatus | null;
+  const status = statusRaw && STATUSES.includes(statusRaw) ? statusRaw : 'completed';
   const yearRaw = text(formData, 'year');
   const year = yearRaw ? Number.parseInt(yearRaw, 10) : null;
 
@@ -71,26 +88,50 @@ export async function saveProject(_prev: ProjectFormState, formData: FormData): 
       .map((t) => t.trim())
       .filter(Boolean),
     live_url: liveUrl,
-    repo_url: repoUrl,
+    // A private repository never goes to the public table: its address lives in project_private.
+    repo_url: repoPrivate ? null : repoUrl,
+    repo_private: repoPrivate,
+    status,
     year: Number.isFinite(year) ? year : null,
     featured: formData.get('featured') === 'on',
     published: formData.get('published') === 'on',
     sort_order: Number.parseInt(text(formData, 'sort_order') || '0', 10) || 0,
+    for_sale: formData.get('for_sale') === 'on',
+    price_label: text(formData, 'price_label'),
+    sale_note_pt: text(formData, 'sale_note_pt'),
+    sale_note_en: text(formData, 'sale_note_en'),
+    challenge_pt: text(formData, 'challenge_pt'),
+    challenge_en: text(formData, 'challenge_en'),
+    solution_pt: text(formData, 'solution_pt'),
+    solution_en: text(formData, 'solution_en'),
+    results_pt: text(formData, 'results_pt'),
+    results_en: text(formData, 'results_en'),
+    highlights_pt: lines(formData, 'highlights_pt'),
+    highlights_en: lines(formData, 'highlights_en'),
     ...(coverUrl !== undefined ? { cover_url: coverUrl } : {}),
   };
 
-  const { error } = id
-    ? await supabase.from('projects').update(record).eq('id', id)
-    : await supabase.from('projects').insert(record);
+  const { data: saved, error } = id
+    ? await supabase.from('projects').update(record).eq('id', id).select('id').single()
+    : await supabase.from('projects').insert(record).select('id').single();
 
-  if (error) {
-    if (error.code === '23505') return { error: 'Já existe um projeto com esse endereço (slug).' };
-    return { error: error.message };
+  if (error || !saved) {
+    if (error?.code === '23505') return { error: 'Já existe um projeto com esse endereço (slug).' };
+    return { error: error?.message ?? 'Não foi possível salvar.' };
   }
+
+  const { error: privateError } = await supabase.from('project_private').upsert({
+    project_id: saved.id,
+    repo_url: repoPrivate ? repoUrl : null,
+    github_full_name: text(formData, 'github_full_name'),
+    internal_price: text(formData, 'internal_price'),
+    notes: text(formData, 'notes'),
+  });
+  if (privateError) return { error: privateError.message };
 
   revalidatePublicSite();
   revalidatePath('/admin/projetos');
-  redirect('/admin/projetos?salvo=1');
+  redirect(id ? '/admin/projetos?salvo=1' : `/admin/projetos/${saved.id}?criado=1`);
 }
 
 export async function setProjectFlag(id: string, field: 'published' | 'featured', value: boolean) {
@@ -105,4 +146,135 @@ export async function deleteProject(id: string) {
   await supabase.from('projects').delete().eq('id', id);
   revalidatePublicSite();
   redirect('/admin/projetos');
+}
+
+/* ───────────────────────── Gallery ───────────────────────── */
+
+export interface GalleryResult {
+  error?: string;
+  gallery?: GalleryItem[];
+  coverUrl?: string | null;
+}
+
+async function loadProject(id: string) {
+  const { supabase } = await requireAdmin();
+  const { data } = await supabase.from('projects').select('id, slug, gallery, cover_url, live_url').eq('id', id).single();
+  return { supabase, project: data as Pick<ProjectRow, 'id' | 'slug' | 'gallery' | 'cover_url' | 'live_url'> | null };
+}
+
+async function saveGallery(id: string, gallery: GalleryItem[], extra: Record<string, unknown> = {}): Promise<GalleryResult> {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from('projects')
+    .update({ gallery, ...extra })
+    .eq('id', id)
+    .select('gallery, cover_url')
+    .single();
+  if (error) return { error: error.message };
+  revalidatePublicSite();
+  return { gallery: data.gallery as GalleryItem[], coverUrl: data.cover_url as string | null };
+}
+
+export async function addGalleryImages(id: string, formData: FormData): Promise<GalleryResult> {
+  const { supabase, project } = await loadProject(id);
+  if (!project) return { error: 'Projeto não encontrado.' };
+  const files = formData.getAll('images').filter((f): f is File => f instanceof File && f.size > 0).slice(0, 10);
+  if (files.length === 0) return { error: 'Escolha pelo menos uma imagem.' };
+
+  const added: GalleryItem[] = [];
+  try {
+    for (const [i, file] of files.entries()) {
+      const url = await uploadPublicFile(supabase, file, 'gallery', `${project.slug}-${i}`);
+      if (url) added.push({ url, caption_pt: null, caption_en: null });
+    }
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+  return saveGallery(id, [...(project.gallery ?? []), ...added]);
+}
+
+export async function updateGallery(id: string, gallery: GalleryItem[]): Promise<GalleryResult> {
+  const clean = gallery
+    .filter((g) => typeof g.url === 'string' && g.url.startsWith('http'))
+    .slice(0, 30)
+    .map((g) => ({
+      url: g.url,
+      caption_pt: g.caption_pt?.trim().slice(0, 200) || null,
+      caption_en: g.caption_en?.trim().slice(0, 200) || null,
+    }));
+  return saveGallery(id, clean);
+}
+
+export async function setCoverFromGallery(id: string, url: string): Promise<GalleryResult> {
+  const { project } = await loadProject(id);
+  if (!project) return { error: 'Projeto não encontrado.' };
+  if (!(project.gallery ?? []).some((g) => g.url === url)) return { error: 'Imagem não pertence à galeria.' };
+  return saveGallery(id, project.gallery, { cover_url: url });
+}
+
+/** Screenshots the project's live site and stores it as the cover or as a new gallery image. */
+export async function captureLiveSite(id: string, target: 'cover' | 'gallery'): Promise<GalleryResult> {
+  const { supabase, project } = await loadProject(id);
+  if (!project) return { error: 'Projeto não encontrado.' };
+  if (!project.live_url) return { error: 'Preencha o link do sistema no ar e salve antes de capturar.' };
+
+  try {
+    const { bytes, contentType } = await captureScreenshot(project.live_url);
+    const ext = contentType.includes('jpeg') ? 'jpg' : contentType.includes('webp') ? 'webp' : 'png';
+    const path = `captures/${project.slug}-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('public-assets').upload(path, bytes, { contentType, upsert: false });
+    if (error) return { error: `Falha ao salvar a captura: ${error.message}` };
+    const url = supabase.storage.from('public-assets').getPublicUrl(path).data.publicUrl;
+
+    if (target === 'cover') return saveGallery(id, project.gallery ?? [], { cover_url: url });
+    return saveGallery(id, [...(project.gallery ?? []), { url, caption_pt: null, caption_en: null }]);
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+/* ───────────────────────── GitHub import ───────────────────────── */
+
+export async function importFromGithub(fullName: string) {
+  const { supabase } = await requireAdmin();
+  const repo = (await listRepos()).find((r) => r.fullName === fullName);
+  if (!repo) redirect('/admin/projetos/importar?erro=repo');
+
+  const baseSlug = slugify(repo.name) || 'projeto';
+  const { data: clash } = await supabase.from('projects').select('slug').like('slug', `${baseSlug}%`);
+  const taken = new Set((clash ?? []).map((r) => r.slug));
+  let slug = baseSlug;
+  for (let n = 2; taken.has(slug); n++) slug = `${baseSlug}-${n}`;
+
+  const technologies = Array.from(new Set([repo.language, ...repo.topics].filter((t): t is string => Boolean(t)))).slice(0, 8);
+  const live = validUrl(repo.homepage);
+
+  const { data: created, error } = await supabase
+    .from('projects')
+    .insert({
+      slug,
+      title_pt: titleFromRepoName(repo.name),
+      summary_pt: repo.description || 'Descreva em uma ou duas frases o que este sistema faz.',
+      technologies,
+      live_url: live,
+      repo_url: repo.isPrivate ? null : repo.htmlUrl,
+      repo_private: repo.isPrivate,
+      status: live ? 'live' : 'completed',
+      year: new Date(repo.pushedAt).getFullYear(),
+      published: false,
+      featured: false,
+      sort_order: 100,
+    })
+    .select('id')
+    .single();
+  if (error || !created) redirect('/admin/projetos/importar?erro=salvar');
+
+  await supabase.from('project_private').upsert({
+    project_id: created.id,
+    repo_url: repo.isPrivate ? repo.htmlUrl : null,
+    github_full_name: repo.fullName,
+  });
+
+  revalidatePath('/admin/projetos');
+  redirect(`/admin/projetos/${created.id}?importado=1`);
 }

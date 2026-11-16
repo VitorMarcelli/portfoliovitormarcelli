@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { deleteLead, updateLeadNotes, updateLeadStatus } from '@/actions/admin/leads';
 import type { LeadRow, LeadStatus } from '@/lib/types';
 import { formatPhone, whatsappLink } from '@/lib/whatsapp/link';
-import { STATUS_LABELS } from '@/lib/labels';
+import { INTENT_LABELS, STATUS_LABELS } from '@/lib/labels';
 import { inputClass, timeAgo } from './ui';
 
 export default function LeadCard({ lead }: { lead: LeadRow }) {
@@ -23,6 +23,23 @@ export default function LeadCard({ lead }: { lead: LeadRow }) {
           <p className="text-sm text-muted">
             {lead.source === 'whatsapp' ? 'Via WhatsApp' : 'Via formulário do site'}, {timeAgo(lead.created_at)}
           </p>
+          {(lead.project_slug || lead.intent !== 'contato') && (
+            <p className="mt-2 flex flex-wrap gap-1.5 text-xs">
+              {lead.intent !== 'contato' && (
+                <span className="rounded-full border border-accent/50 bg-accent/10 px-2 py-0.5 font-medium">{INTENT_LABELS[lead.intent]}</span>
+              )}
+              {lead.project_slug && (
+                <a
+                  href={`/projetos/${lead.project_slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full border border-border px-2 py-0.5 underline-offset-2 hover:underline"
+                >
+                  Projeto: {lead.project_slug}
+                </a>
+              )}
+            </p>
+          )}
         </div>
         <select
           aria-label={`Status de ${lead.name}`}

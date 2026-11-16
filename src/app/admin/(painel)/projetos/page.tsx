@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { FlagToggle } from '@/components/admin/ProjectToggles';
-import { buttonPrimary, EmptyState, PageHeader } from '@/components/admin/ui';
+import { buttonPrimary, buttonSecondary, EmptyState, PageHeader } from '@/components/admin/ui';
+import { PROJECT_STATUS_LABELS } from '@/lib/labels';
 import { requireAdmin } from '@/lib/auth';
 import type { ProjectRow } from '@/lib/types';
 
@@ -21,11 +22,16 @@ export default async function ProjectsAdminPage({ searchParams }: PageProps<'/ad
     <>
       <PageHeader
         title="Projetos"
-        description="O que aparece na seção de projetos do site. Projetos em destaque ganham bloco grande com capa; os demais entram na lista."
+        description="O que aparece na seção de projetos do site, incluindo projetos de código privado à venda. Destaques ganham bloco grande com capa."
         actions={
-          <Link href="/admin/projetos/novo" className={buttonPrimary}>
-            Novo projeto
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/admin/projetos/importar" className={buttonSecondary}>
+              Importar do GitHub
+            </Link>
+            <Link href="/admin/projetos/novo" className={buttonPrimary}>
+              Novo projeto
+            </Link>
+          </div>
         }
       />
 
@@ -59,8 +65,17 @@ export default async function ProjectsAdminPage({ searchParams }: PageProps<'/ad
                   <td className="px-4 py-3">
                     <p className="font-medium">{p.title_pt}</p>
                     <p className="text-muted">
-                      {[p.category_pt, p.year, !p.title_en && 'sem tradução EN'].filter(Boolean).join(', ')}
+                      {[p.category_pt, p.year, !p.title_en && 'sem tradução EN', !p.cover_url && 'sem capa'].filter(Boolean).join(', ')}
                     </p>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5 text-xs">
+                      <span className="rounded-full border border-border px-2 py-0.5">{PROJECT_STATUS_LABELS[p.status]}</span>
+                      {p.repo_private && <span className="rounded-full border border-border px-2 py-0.5">Código privado</span>}
+                      {p.for_sale && (
+                        <span className="rounded-full border border-accent/50 bg-accent/10 px-2 py-0.5">
+                          À venda{p.price_label ? `: ${p.price_label}` : ''}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 tabular-nums">{p.sort_order}</td>
                   <td className="px-4 py-3">
