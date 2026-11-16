@@ -19,6 +19,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type FocusEvent,
   type ReactElement,
   type ReactNode,
   type Ref,
@@ -37,7 +38,7 @@ const DISTANCE = 80;
 const PANEL_HEIGHT = 64;
 const ICON_SIZE = 40;
 /** Narrow screens (below Tailwind's sm) get smaller resting icons so eight of them fit. */
-const ICON_SIZE_COMPACT = 32;
+const ICON_SIZE_COMPACT = 30;
 const COMPACT_QUERY = '(max-width: 639px)';
 
 interface DockContextValue {
@@ -87,16 +88,21 @@ function DockPanel({ children, label }: { children: ReactNode; label: string }) 
   return (
     <motion.div style={{ height, scrollbarWidth: 'none' }} className="mx-2 flex max-w-full items-end overflow-x-auto">
       <motion.div
-        onMouseEnter={() => measures.current.forEach((measure) => measure())}
-        onMouseMove={({ clientX }) => {
-          isHovered.set(1);
-          mouseX.set(clientX);
+        // Magnify only for a real mouse. On touch screens a tap fires emulated mouse enter/move events
+        // but never a leave, which left the icons enlarged and the bar stuck open on phones.
+        onPointerEnter={(e) => {
+          if (e.pointerType === 'mouse') measures.current.forEach((measure) => measure());
         }}
-        onMouseLeave={() => {
+        onPointerMove={(e) => {
+          if (e.pointerType !== 'mouse') return;
+          isHovered.set(1);
+          mouseX.set(e.clientX);
+        }}
+        onPointerLeave={() => {
           isHovered.set(0);
           mouseX.set(Infinity);
         }}
-        className="mx-auto flex w-fit items-end gap-2.5 rounded-2xl bg-[#f9fafb] px-3 pb-3 sm:gap-4 sm:px-4 dark:bg-[#171717]"
+        className="mx-auto flex w-fit items-end gap-1.5 rounded-2xl bg-[#f9fafb] px-2.5 pb-3 sm:gap-4 sm:px-4 dark:bg-[#171717]"
         style={{ height: PANEL_HEIGHT }}
         role="toolbar"
         aria-label={label}
@@ -158,7 +164,12 @@ function DockItem({
     style: { width },
     onHoverStart: () => isHovered.set(1),
     onHoverEnd: () => isHovered.set(0),
-    onFocus: () => isHovered.set(1),
+    // Keyboard focus only: a tap focuses the button on Android, and the label would stay up.
+    onFocus: (e: FocusEvent<HTMLElement>) => {
+      if (e.currentTarget.matches(':focus-visible')) isHovered.set(1);
+    },
+    // Touch feedback in place of the magnification.
+    whileTap: { scale: 0.88 },
     onBlur: () => isHovered.set(0),
     'aria-label': ariaLabel,
     className:
@@ -168,6 +179,8 @@ function DockItem({
   // Buttons, not links, like the reference dock: sweeping the mouse over links makes the browser
   // show and hide its URL status bubble for every icon, which stutters in some browsers (Opera GX).
   function activate() {
+    // After a tap, drop focus so nothing stays highlighted on touch screens.
+    if (ref.current && !ref.current.matches(':focus-visible')) ref.current.blur();
     onClick?.();
     if (!href) return;
     if (external) window.open(href, '_blank', 'noopener,noreferrer');
