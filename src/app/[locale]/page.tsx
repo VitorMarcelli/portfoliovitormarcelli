@@ -214,6 +214,16 @@ function About({ t }: { t: Dictionary }) {
               </p>
             ))}
           </div>
+          <div className="mt-8 border-t border-border pt-6">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted">{t.about.segmentsTitle}</p>
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {t.about.segments.map((segment) => (
+                <li key={segment} className="rounded-full border border-border bg-surface-2 px-3.5 py-1.5 text-sm">
+                  {segment}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </NightSection>
@@ -230,6 +240,10 @@ function Services({ t }: { t: Dictionary }) {
             <span className="block h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_14px_var(--glow)]" aria-hidden="true" />
             <h3 className="mt-5 font-display text-2xl font-semibold tracking-tight">{s.title}</h3>
             <p className="mt-3 text-lg leading-relaxed text-muted">{s.description}</p>
+            <p className="mt-5 text-sm">
+              <span className="text-muted">{t.services.proofLabel}: </span>
+              <span className="text-accent-text">{s.proof}</span>
+            </p>
           </div>
         ))}
       </div>

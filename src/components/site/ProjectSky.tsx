@@ -24,15 +24,18 @@ const ZOOM = 700;
 /** The active star sits left of center (right of center near the edge) so its name fits beside it. */
 const LABEL_ROOM = 150;
 const OVERVIEW = `0 0 ${SIZE} ${SIZE}`;
-/** Where each category's constellation sits in the sky (in a 1000 × 1000 box). */
+/**
+ * Where each category's constellation sits in the sky (in a 1000 × 1000 box): a hexagon around the
+ * center, 330 apart, so clusters (radius up to 130) never overlap. A seventh category takes the middle.
+ */
 const CENTERS: [number, number][] = [
-  [300, 290],
-  [715, 330],
-  [650, 735],
-  [285, 715],
+  [335, 214],
+  [665, 214],
+  [830, 500],
+  [665, 786],
+  [335, 786],
+  [170, 500],
   [500, 500],
-  [150, 500],
-  [850, 560],
 ];
 
 function hash(text: string) {
@@ -270,10 +273,13 @@ export default function ProjectSky({ stars, articles, hint, label }: ProjectSkyP
                           fill="var(--foreground)"
                           fontSize={isActive ? 22 : 17}
                           fontWeight={isActive ? 600 : 400}
-                          opacity={isActive ? 1 : 0.75}
+                          // Names only in the constellation being visited: with many stars, every
+                          // label at once turns into overlapping text.
+                          opacity={isActive ? 1 : lit ? 0.75 : 0}
                           style={{ transition: 'all 0.6s', fontFamily: 'var(--font-display)' }}
                         >
-                          {star.title}
+                          {/* Short name in the sky ("Giro, PDV para adegas" → "Giro"); the card has the full title. */}
+                          {star.title.split(',')[0]}
                         </text>
                       </g>
                     );
@@ -306,7 +312,7 @@ export default function ProjectSky({ stars, articles, hint, label }: ProjectSkyP
             key={star.slug}
             id={`projeto-${star.slug}`}
             data-star-article={star.slug}
-            className={`scroll-mt-[40vh] transition-opacity duration-700 lg:flex lg:min-h-[85vh] lg:scroll-mt-0 lg:items-center ${
+            className={`scroll-mt-[40vh] transition-opacity duration-700 lg:flex lg:min-h-[72vh] lg:scroll-mt-0 lg:items-center ${
               active === null || active === star.slug ? 'opacity-100' : 'opacity-45'
             }`}
           >
