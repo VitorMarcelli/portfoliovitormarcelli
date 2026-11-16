@@ -590,3 +590,18 @@ body {
 /* Decorations (orbit rings, radio waves) may spill past the edges; never let them widen the page.
    `clip` (not `hidden`) keeps the sticky sky working. */
 body { overflow-x: clip; }
+
+/* ───────────────────────── Testimonials (stars that light up) ───────────────────────── */
+.rating-star { color: var(--border); transition: color 0.4s, filter 0.4s; transition-delay: var(--d, 0ms); }
+.rating-star.is-on { color: var(--accent-text); filter: drop-shadow(0 0 6px var(--glow)); }
+.quote-mark { font-family: Georgia, serif; line-height: 0.6; color: color-mix(in srgb, var(--accent) 40%, transparent); }
+
+/* ───────────────────────── FAQ (accordion) ───────────────────────── */
+.faq-item { interpolate-size: allow-keywords; }
+.faq-item summary { list-style: none; cursor: pointer; }
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item::details-content { block-size: 0; overflow: hidden; transition: block-size 0.35s ease, content-visibility 0.35s allow-discrete; }
+.faq-item[open]::details-content { block-size: auto; }
+.faq-plus { transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+.faq-item[open] .faq-plus { transform: rotate(45deg); }
+.faq-item[open] { border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }

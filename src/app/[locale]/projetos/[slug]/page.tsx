@@ -8,9 +8,10 @@ import ProjectCover from '@/components/site/ProjectCover';
 import ProjectFlow from '@/components/site/ProjectFlow';
 import ProjectGallery from '@/components/site/ProjectGallery';
 import RevealTitle from '@/components/site/RevealTitle';
+import TestimonialCard from '@/components/site/TestimonialCard';
 import TrackedLink from '@/components/site/TrackedLink';
 import { getDictionary, isLocale, localePath, locales } from '@/i18n/dictionaries';
-import { getProject, getPublishedProjectRows } from '@/lib/data';
+import { getProject, getPublishedProjectRows, getTestimonials } from '@/lib/data';
 
 export const revalidate = 3600;
 export const dynamicParams = true;
@@ -54,8 +55,9 @@ const reveal = (ms: number) => ({ '--reveal-delay': `${ms}ms` }) as CSSPropertie
 export default async function ProjectPage({ params }: PageProps<'/[locale]/projetos/[slug]'>) {
   const { locale, slug } = await params;
   if (!isLocale(locale)) notFound();
-  const project = await getProject(slug, locale);
+  const [project, allTestimonials] = await Promise.all([getProject(slug, locale), getTestimonials(locale)]);
   if (!project) notFound();
+  const testimonials = allTestimonials.filter((item) => item.projectSlug === project.slug);
   const t = getDictionary(locale);
   const tp = t.projects;
 
@@ -257,6 +259,19 @@ export default async function ProjectPage({ params }: PageProps<'/[locale]/proje
             images={project.gallery}
             labels={{ open: tp.galleryOpen, close: tp.galleryClose, prev: tp.galleryPrev, next: tp.galleryNext }}
           />
+        </section>
+      )}
+
+      {testimonials.length > 0 && (
+        <section className="mt-16" aria-labelledby="depoimento-titulo">
+          <h2 id="depoimento-titulo" data-reveal className="mb-6 font-display text-3xl font-semibold">
+            {t.testimonials.onProject}
+          </h2>
+          <div className={testimonials.length > 1 ? 'grid gap-6 md:grid-cols-2' : 'max-w-3xl'}>
+            {testimonials.map((item) => (
+              <TestimonialCard key={item.id} testimonial={item} ratingLabel={t.testimonials.ratingLabel} />
+            ))}
+          </div>
         </section>
       )}
 

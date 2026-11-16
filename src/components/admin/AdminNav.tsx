@@ -17,6 +17,8 @@ const ITEMS = [
   { href: '/admin/conversas', label: 'Conversas', badge: 'attention' as const },
   { href: '/admin/leads', label: 'Leads', badge: 'leads' as const },
   { href: '/admin/projetos', label: 'Projetos' },
+  { href: '/admin/depoimentos', label: 'Depoimentos' },
+  { href: '/admin/perguntas', label: 'Perguntas' },
   { href: '/admin/trajetoria', label: 'Trajetória' },
   { href: '/admin/configuracoes', label: 'Configurações' },
 ];

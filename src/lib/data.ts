@@ -3,7 +3,18 @@ import { cache } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { isSupabaseConfigured, SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from '@/lib/env';
 import { getSupabaseAdmin, hasSupabaseAdmin } from '@/lib/supabase/admin';
-import type { Experience, ExperienceRow, Locale, Project, ProjectRow, PublicSettings } from '@/lib/types';
+import type {
+  Experience,
+  ExperienceRow,
+  Faq,
+  FaqRow,
+  Locale,
+  Project,
+  ProjectRow,
+  PublicSettings,
+  Testimonial,
+  TestimonialRow,
+} from '@/lib/types';
 
 function publicClient() {
   return createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
@@ -84,6 +95,43 @@ export async function getExperiences(locale: Locale): Promise<Experience[]> {
     endDate: row.end_date,
   }));
 }
+
+export const getTestimonials = cache(async (locale: Locale): Promise<Testimonial[]> => {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await publicClient()
+    .from('testimonials')
+    .select('*')
+    .eq('published', true)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(`[data] testimonials: ${error.message}`);
+  const en = locale === 'en';
+  return (data as TestimonialRow[]).map((row) => ({
+    id: row.id,
+    author: row.author_name,
+    role: (en && row.author_role_en) || row.author_role_pt,
+    quote: (en && row.quote_en) || row.quote_pt,
+    rating: row.rating,
+    projectSlug: row.project_slug,
+    source: row.source,
+  }));
+});
+
+export const getFaqs = cache(async (locale: Locale): Promise<Faq[]> => {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await publicClient()
+    .from('faqs')
+    .select('*')
+    .eq('published', true)
+    .order('sort_order', { ascending: true });
+  if (error) throw new Error(`[data] faqs: ${error.message}`);
+  const en = locale === 'en';
+  return (data as FaqRow[]).map((row) => ({
+    id: row.id,
+    question: (en && row.question_en) || row.question_pt,
+    answer: (en && row.answer_en) || row.answer_pt,
+  }));
+});
 
 const DEFAULT_SETTINGS: PublicSettings = { available: true, whatsappNumber: null, cvUrl: null };
 

@@ -13,9 +13,11 @@ import StackOrbit from '@/components/site/StackOrbit';
 import TrackedLink from '@/components/site/TrackedLink';
 import WelcomeLoader from '@/components/site/WelcomeLoader';
 import { getDictionary, isLocale, localePath, type Dictionary } from '@/i18n/dictionaries';
-import { getExperiences, getProjects, getPublicSettings } from '@/lib/data';
+import FaqList from '@/components/site/FaqList';
+import TestimonialCard from '@/components/site/TestimonialCard';
+import { getExperiences, getFaqs, getProjects, getPublicSettings, getTestimonials } from '@/lib/data';
 import { CONTACT } from '@/lib/env';
-import type { Experience, Locale, Project, PublicSettings } from '@/lib/types';
+import type { Experience, Faq, Locale, Project, PublicSettings, Testimonial } from '@/lib/types';
 import { whatsappLink } from '@/lib/whatsapp/link';
 
 export const revalidate = 3600;
@@ -25,10 +27,12 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
   if (!isLocale(locale)) notFound();
   const t = getDictionary(locale);
 
-  const [projects, experiences, settings] = await Promise.all([
+  const [projects, experiences, settings, testimonials, faqs] = await Promise.all([
     getProjects(locale),
     getExperiences(locale),
     getPublicSettings(),
+    getTestimonials(locale),
+    getFaqs(locale),
   ]);
 
   return (
@@ -41,6 +45,8 @@ export default async function HomePage({ params }: PageProps<'/[locale]'>) {
       <Career t={t} locale={locale} experiences={experiences} cvUrl={settings.cvUrl} />
       <Stack t={t} />
       <Approach t={t} />
+      <Testimonials t={t} locale={locale} testimonials={testimonials} projects={projects} />
+      <FaqSection t={t} faqs={faqs} settings={settings} />
       <Contact t={t} settings={settings} />
     </>
   );
@@ -335,6 +341,94 @@ function Approach({ t }: { t: Dictionary }) {
     <NightSection id="metodo" labelledBy="metodo-titulo" scene={{ x: -0.95, y: -0.35, scale: 0.22 }}>
       <SectionHeader id="metodo-titulo" title={t.approach.title} />
       <FlightRoute steps={t.approach.items} />
+    </NightSection>
+  );
+}
+
+function Testimonials({
+  t,
+  locale,
+  testimonials,
+  projects,
+}: {
+  t: Dictionary;
+  locale: Locale;
+  testimonials: Testimonial[];
+  projects: Project[];
+}) {
+  if (testimonials.length === 0) return null;
+  const titleOf = new Map(projects.map((p) => [p.slug, p.title]));
+  // One testimonial gets the full width; more go in two columns.
+  const cols = testimonials.length === 1 ? 'mx-auto max-w-3xl' : 'grid gap-6 md:grid-cols-2';
+
+  return (
+    <NightSection id="depoimentos" labelledBy="depoimentos-titulo" scene={{ x: 0.95, y: -0.35, scale: 0.22 }}>
+      <SectionHeader id="depoimentos-titulo" title={t.testimonials.title} subtitle={t.testimonials.subtitle} />
+      <div className={cols}>
+        {testimonials.map((item, i) => {
+          const projectTitle = item.projectSlug ? titleOf.get(item.projectSlug) : undefined;
+          return (
+            <TestimonialCard
+              key={item.id}
+              testimonial={item}
+              ratingLabel={t.testimonials.ratingLabel}
+              style={reveal((i % 2) * 120)}
+              project={
+                projectTitle
+                  ? { href: localePath(locale, `/projetos/${item.projectSlug}`), title: projectTitle, label: t.testimonials.project }
+                  : null
+              }
+            />
+          );
+        })}
+      </div>
+    </NightSection>
+  );
+}
+
+function FaqSection({ t, faqs, settings }: { t: Dictionary; faqs: Faq[]; settings: PublicSettings }) {
+  if (faqs.length === 0) return null;
+  const wa = settings.whatsappNumber ? whatsappLink(settings.whatsappNumber, t.contact.whatsappMessage) : null;
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({ '@type': 'Question', name: f.question, acceptedAnswer: { '@type': 'Answer', text: f.answer } })),
+  };
+
+  return (
+    <NightSection id="perguntas" labelledBy="perguntas-titulo" scene={{ x: -0.95, y: 0.35, scale: 0.22 }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      <div className="grid gap-10 lg:grid-cols-12">
+        <div className="lg:col-span-4">
+          <div className="lg:sticky lg:top-24">
+            <RevealTitle
+              id="perguntas-titulo"
+              text={t.faq.title}
+              className="night-gradient font-display text-4xl font-bold tracking-tight sm:text-5xl"
+            />
+            <p data-reveal className="mt-4 text-lg text-muted" style={reveal(250)}>
+              {t.faq.subtitle}
+            </p>
+            {wa && (
+              <p data-reveal className="mt-8" style={reveal(350)}>
+                <span className="block text-sm text-muted">{t.faq.stillDoubt}</span>
+                <TrackedLink
+                  event="whatsapp_faq"
+                  href={wa}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-1 inline-block font-medium text-accent-text underline underline-offset-4"
+                >
+                  {t.faq.ask}
+                </TrackedLink>
+              </p>
+            )}
+          </div>
+        </div>
+        <div className="lg:col-span-8">
+          <FaqList items={faqs} />
+        </div>
+      </div>
     </NightSection>
   );
 }

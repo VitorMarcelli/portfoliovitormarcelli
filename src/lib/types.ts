@@ -72,6 +72,30 @@ export interface ExperienceRow {
   published: boolean;
 }
 
+export interface TestimonialRow {
+  id: string;
+  author_name: string;
+  author_role_pt: string | null;
+  author_role_en: string | null;
+  quote_pt: string;
+  quote_en: string | null;
+  rating: number | null;
+  project_slug: string | null;
+  source: string | null;
+  published: boolean;
+  sort_order: number;
+}
+
+export interface FaqRow {
+  id: string;
+  question_pt: string;
+  question_en: string | null;
+  answer_pt: string;
+  answer_en: string | null;
+  published: boolean;
+  sort_order: number;
+}
+
 export interface SettingsRow {
   id: 1;
   available: boolean;
@@ -165,6 +189,22 @@ export interface Experience {
   description: string | null;
   startDate: string;
   endDate: string | null;
+}
+
+export interface Testimonial {
+  id: string;
+  author: string;
+  role: string | null;
+  quote: string;
+  rating: number | null;
+  projectSlug: string | null;
+  source: string | null;
+}
+
+export interface Faq {
+  id: string;
+  question: string;
+  answer: string;
 }
 
 export interface PublicSettings {

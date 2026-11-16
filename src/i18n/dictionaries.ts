@@ -167,6 +167,19 @@ const pt = {
       },
     ],
   },
+  testimonials: {
+    title: 'O que dizem os clientes',
+    subtitle: 'Palavras de quem já colocou um sistema meu para trabalhar no dia a dia.',
+    ratingLabel: '{n} de 5 estrelas',
+    project: 'Projeto',
+    onProject: 'O que o cliente disse',
+  },
+  faq: {
+    title: 'Perguntas frequentes',
+    subtitle: 'O que normalmente se pergunta antes de começar um projeto.',
+    stillDoubt: 'Ficou alguma dúvida?',
+    ask: 'Pergunte no WhatsApp',
+  },
   contact: {
     title: 'Vamos conversar sobre o seu projeto',
     subtitle:
@@ -377,6 +390,19 @@ const en: Dictionary = {
         description: 'I monitor errors and usage in production, fix what shows up in daily use and document everything for whoever comes next.',
       },
     ],
+  },
+  testimonials: {
+    title: 'What clients say',
+    subtitle: 'Words from people who already have one of my systems working in their daily routine.',
+    ratingLabel: '{n} out of 5 stars',
+    project: 'Project',
+    onProject: 'What the client said',
+  },
+  faq: {
+    title: 'Frequently asked questions',
+    subtitle: 'What people usually ask before starting a project.',
+    stillDoubt: 'Still have a question?',
+    ask: 'Ask on WhatsApp',
   },
   contact: {
     title: 'Let’s talk about your project',
