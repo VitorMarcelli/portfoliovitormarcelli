@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: PageProps<'/[locale]/projetos
   if (!isLocale(locale)) return {};
   const project = await getProject(slug, locale);
   if (!project) return {};
-  const image = project.coverUrl ?? project.gallery[0]?.url;
+  // The share image is the generated card in ./opengraph-image.tsx (works even without a cover).
   return {
     title: project.title,
     description: project.summary,
@@ -33,7 +33,13 @@ export async function generateMetadata({ params }: PageProps<'/[locale]/projetos
       canonical: localePath(locale, `/projetos/${slug}`),
       languages: { 'pt-BR': `/projetos/${slug}`, en: `/en/projetos/${slug}` },
     },
-    openGraph: { title: project.title, description: project.summary, images: image ? [image] : undefined },
+    openGraph: {
+      type: 'article',
+      title: project.title,
+      description: project.summary,
+      url: localePath(locale, `/projetos/${slug}`),
+    },
+    twitter: { card: 'summary_large_image', title: project.title, description: project.summary },
   };
 }
 
@@ -199,7 +205,8 @@ export default async function ProjectPage({ params }: PageProps<'/[locale]/proje
                     <span className="mt-1">
                       <LockIcon />
                     </span>
-                    {tp.privateCodeHint}
+                    {/* Only promise a demo when there is a live link to show. */}
+                    {project.liveUrl ? tp.privateCodeHint : tp.privateCodeHintNoDemo}
                   </span>
                 ) : (
                   project.repoUrl && (
