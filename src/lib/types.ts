@@ -41,6 +41,8 @@ export interface ProjectRow {
   results_en: string | null;
   highlights_pt: string[];
   highlights_en: string[];
+  flow_pt: string[];
+  flow_en: string[];
   gallery: GalleryItem[];
   created_at: string;
   updated_at: string;
@@ -147,6 +149,8 @@ export interface Project {
   solution: string | null;
   results: string | null;
   highlights: string[];
+  /** "How it works" steps, input to output. */
+  flow: string[];
   gallery: { url: string; caption: string | null }[];
 }
 

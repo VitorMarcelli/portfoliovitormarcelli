@@ -108,6 +108,8 @@ export async function saveProject(_prev: ProjectFormState, formData: FormData): 
     results_en: text(formData, 'results_en'),
     highlights_pt: lines(formData, 'highlights_pt'),
     highlights_en: lines(formData, 'highlights_en'),
+    flow_pt: lines(formData, 'flow_pt').slice(0, 5),
+    flow_en: lines(formData, 'flow_en').slice(0, 5),
     ...(coverUrl !== undefined ? { cover_url: coverUrl } : {}),
   };
 

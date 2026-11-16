@@ -5,6 +5,7 @@ import type { CSSProperties } from 'react';
 import ContactForm from '@/components/site/ContactForm';
 import ProjectBadges, { LockIcon } from '@/components/site/ProjectBadges';
 import ProjectCover from '@/components/site/ProjectCover';
+import ProjectFlow from '@/components/site/ProjectFlow';
 import ProjectGallery from '@/components/site/ProjectGallery';
 import RevealTitle from '@/components/site/RevealTitle';
 import TrackedLink from '@/components/site/TrackedLink';
@@ -112,6 +113,17 @@ export default async function ProjectPage({ params }: PageProps<'/[locale]/proje
         <div data-reveal className="glow-card mt-12 p-3 sm:p-4">
           <ProjectCover project={project} priority sizes="(min-width: 1152px) 1152px, 100vw" />
         </div>
+      )}
+
+      {project.flow.length > 1 && (
+        <section data-reveal className="glow-card mt-12 p-7 sm:p-9" aria-labelledby="como-funciona">
+          <h2 id="como-funciona" className="font-display text-2xl font-semibold">
+            {tp.howItWorks}
+          </h2>
+          <div className="mt-6">
+            <ProjectFlow steps={project.flow} label={tp.howItWorks} />
+          </div>
+        </section>
       )}
 
       <div className="mt-12 grid gap-6 lg:grid-cols-12">

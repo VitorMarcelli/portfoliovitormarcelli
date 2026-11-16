@@ -46,6 +46,9 @@ export default function ProjectForm({ project, privateData }: Props) {
             <Field label="Resultados" hint="números e ganhos, se houver">
               <textarea name="results_pt" rows={3} defaultValue={p?.results_pt ?? ''} className={inputClass} />
             </Field>
+            <Field label="Como funciona" hint="3 a 5 etapas curtas, uma por linha: o que entra, o que o sistema faz, o que sai">
+              <textarea name="flow_pt" rows={4} defaultValue={p?.flow_pt?.join('\n') ?? ''} className={inputClass} />
+            </Field>
             <Field label="Destaques" hint="um por linha, até 12">
               <textarea name="highlights_pt" rows={4} defaultValue={p?.highlights_pt.join('\n') ?? ''} className={inputClass} />
             </Field>
@@ -75,6 +78,9 @@ export default function ProjectForm({ project, privateData }: Props) {
             </Field>
             <Field label="Results">
               <textarea name="results_en" rows={3} defaultValue={p?.results_en ?? ''} className={inputClass} />
+            </Field>
+            <Field label="How it works" hint="one step per line">
+              <textarea name="flow_en" rows={4} defaultValue={p?.flow_en?.join('\n') ?? ''} className={inputClass} />
             </Field>
             <Field label="Highlights" hint="one per line">
               <textarea name="highlights_en" rows={4} defaultValue={p?.highlights_en.join('\n') ?? ''} className={inputClass} />

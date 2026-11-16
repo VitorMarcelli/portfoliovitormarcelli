@@ -366,3 +366,103 @@ body {
 .prose-case p + p {
   margin-top: 1.1em;
 }
+
+/* ───────────────────────── Project flow ("how it works") ───────────────────────── */
+/* One 3.5 s cycle: the dot crosses a link in the first 20% (0.7 s); links and nodes are offset by --d. */
+.flow-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  border-radius: 14px;
+  padding: 0.7rem 0.95rem;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  animation: flow-node 3.5s ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+}
+.flow-index {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--accent-text);
+}
+.flow-link {
+  position: relative;
+  align-self: flex-start;
+  margin-left: 1.6rem;
+  width: 2px;
+  height: 1.35rem;
+  background: var(--border);
+}
+.flow-dot {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 8px;
+  height: 8px;
+  margin: -4px 0 0 -4px;
+  border-radius: 9999px;
+  background: var(--beam);
+  box-shadow: 0 0 12px 3px var(--glow), 0 0 4px var(--beam);
+  opacity: 0;
+  animation: flow-dot-y 3.5s linear infinite;
+  animation-delay: var(--d, 0s);
+}
+@container (min-width: 42rem) {
+  .flow-node {
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+  .flow-link {
+    align-self: center;
+    margin: 0;
+    width: 1.75rem;
+    height: 2px;
+    flex-shrink: 0;
+  }
+  .flow-dot {
+    left: 0;
+    top: 50%;
+    animation-name: flow-dot-x;
+  }
+}
+@keyframes flow-dot-y {
+  0% { top: 0; opacity: 0; }
+  3% { opacity: 1; }
+  20% { top: 100%; opacity: 1; }
+  23%, 100% { top: 100%; opacity: 0; }
+}
+@keyframes flow-dot-x {
+  0% { left: 0; opacity: 0; }
+  3% { opacity: 1; }
+  20% { left: 100%; opacity: 1; }
+  23%, 100% { left: 100%; opacity: 0; }
+}
+@keyframes flow-node {
+  0%, 14%, 100% { border-color: var(--border); box-shadow: none; }
+  3% { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 26px -4px var(--glow); }
+}
+
+/* ───────────────────────── Project sky (constellation) ───────────────────────── */
+.night { --star-core: var(--accent); --star-faint: rgba(79, 70, 229, 0.45); }
+.dark .night { --star-core: #f8fbff; --star-faint: rgba(200, 222, 255, 0.75); }
+.sky-twinkle { animation: sky-twinkle 4s ease-in-out infinite; animation-delay: var(--d, 0s); }
+@keyframes sky-twinkle {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.9; }
+}
+.star-ping {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: star-ping 2.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes star-ping {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(2.4); opacity: 0; }
+}

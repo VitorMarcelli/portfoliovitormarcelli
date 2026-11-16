@@ -34,6 +34,7 @@ export function localizeProject(row: ProjectRow, locale: Locale): Project {
     solution: (en && row.solution_en) || row.solution_pt,
     results: (en && row.results_en) || row.results_pt,
     highlights: (en && row.highlights_en?.length ? row.highlights_en : row.highlights_pt) ?? [],
+    flow: (en && row.flow_en?.length ? row.flow_en : row.flow_pt) ?? [],
     gallery: (row.gallery ?? []).map((g) => ({ url: g.url, caption: ((en && g.caption_en) || g.caption_pt) ?? null })),
   };
 }
