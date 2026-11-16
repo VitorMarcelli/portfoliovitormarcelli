@@ -10,6 +10,7 @@ const schema = z.object({
   label: z.string().max(120).optional().nullable(),
   referrer: z.string().max(500).optional().nullable(),
   visitorId: z.string().max(64).optional(),
+  campaign: z.string().regex(/^[a-z0-9-]{1,60}$/).optional().nullable(),
 });
 
 function deviceFrom(ua: string) {
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
       country: request.headers.get('x-vercel-ip-country'),
       device: deviceFrom(ua),
       visitor_id: parsed.data.visitorId ?? null,
+      campaign: parsed.data.campaign ?? null,
     });
   if (error) console.error('[track]', error.message);
 
