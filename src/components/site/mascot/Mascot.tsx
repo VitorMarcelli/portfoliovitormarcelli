@@ -75,7 +75,7 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
   const home = localePath(locale);
   const onHome = pathname === home;
   const onProject = /\/projetos\/[^/]+$/.test(pathname);
-  const reduce = useReducedMotion() ?? false;
+  const calm = useReducedMotion() ?? false;
   const panelId = useId();
 
   const [ready, setReady] = useState(false);
@@ -85,6 +85,7 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
   const [bubble, setBubble] = useState<Bubble | null>(null);
   const [answer, setAnswer] = useState<Faq | null>(null);
   const [typing, setTyping] = useState(false);
+  const [landed, setLanded] = useState(false);
 
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -99,6 +100,7 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
     clicks: 0,
     clickAt: 0,
     busy: false,
+    landed: false,
   });
   const talk = useRef({ last: -1e9, said: new Set<string>(), seq: 0, hovered: false });
   const exprTimer = useRef<number | undefined>(undefined);
@@ -119,6 +121,12 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
   const hop = useMotionValue(0);
   const spin = useMotionValue(0);
   const wave = useMotionValue(0);
+  // Entrance flight (offsets from his final spot).
+  const flyX = useMotionValue(0);
+  const flyY = useMotionValue(0);
+  const flyR = useMotionValue(0);
+  const flyS = useMotionValue(0.3);
+  const flyO = useMotionValue(0);
 
   const vx = useVelocity(sx);
   const vy = useVelocity(sy);
@@ -150,10 +158,10 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
   // Idle float: slow sine, slower and lower while asleep.
   useAnimationFrame((t) => {
     const s = state.current.sleeping;
-    const amp = reduce ? 2 : s ? 3 : 5.5;
+    const amp = calm ? 2.5 : s ? 3 : 5.5;
     const speed = s ? 1500 : 950;
     floatY.set(Math.sin(t / speed) * amp);
-    floatRot.set(Math.sin(t / (speed * 1.45)) * (reduce ? 0.6 : 1.8));
+    floatRot.set(Math.sin(t / (speed * 1.45)) * (calm ? 0.8 : 1.8));
   });
 
   /* ───────── Expressions ───────── */
@@ -170,8 +178,8 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
   }, []);
 
   const waveHand = useCallback(() => {
-    if (!reduce) animate(wave, [0, -120, -95, -125, -95, 0], { duration: 1.7, ease: 'easeInOut' });
-  }, [reduce, wave]);
+    animate(wave, [0, -120, -95, -125, -95, 0], { duration: 1.7, ease: 'easeInOut' });
+  }, [wave]);
 
   const waveHandRef = useRef(waveHand);
   useEffect(() => {
@@ -212,20 +220,20 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
     (key: string, text: string, chips: ChipKey[] = [], opts: { force?: boolean; ms?: number; quiet?: boolean } = {}) => {
       const now = performance.now();
       const t = talk.current;
-      if (state.current.open || state.current.typing) return false;
+      if (!state.current.landed || state.current.open || state.current.typing) return false;
       const gap = window.matchMedia('(pointer: coarse)').matches ? 20000 : 14000;
       if (!opts.force && (t.said.has(key) || now - t.last < gap)) return false;
       t.said.add(key);
       t.last = now;
       const id = ++t.seq;
       const list = usableChips(chips);
-      setBubble({ id, text, chips: list, typing: !reduce });
-      if (!reduce) later(() => setBubble((b) => (b?.id === id ? { ...b, typing: false } : b)), 700 + Math.min(text.length * 8, 600));
+      setBubble({ id, text, chips: list, typing: true });
+      later(() => setBubble((b) => (b?.id === id ? { ...b, typing: false } : b)), 700 + Math.min(text.length * 8, 600));
       hideLater(id, opts.ms ?? (list.length ? 11000 : 7500));
       if (!opts.quiet && !state.current.sleeping) express('happy', 900);
       return true;
     },
-    [usableChips, reduce, later, hideLater, express],
+    [usableChips, later, hideLater, express],
   );
 
   const sayLine = useCallback(
@@ -398,18 +406,88 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
     };
   }, []);
 
-  /* ───────── Greeting on every page, then a comment per section ───────── */
+  /* ───────── Entrance: when the site opens he leaves the center, loops around and lands in his corner ───────── */
   useEffect(() => {
     if (!ready) return;
+    const el = buttonRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    const W = window.innerWidth;
+    const H = window.innerHeight;
+    // Offsets from his final spot: he starts where the welcome greeting was.
+    const sx = W / 2 - (r.left + r.width / 2);
+    const sy = H * 0.5 - (r.top + r.height / 2);
+    const R = Math.min(W, H) * (W < 768 ? 0.2 : 0.17);
+    const N = 56;
+    const LOOP = 0.56;
+    const easeInOut = (t: number) => 0.5 - Math.cos(Math.PI * t) / 2;
+    const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
+    const xs: number[] = [];
+    const ys: number[] = [];
+    const rot: number[] = [];
+    const scale: number[] = [];
+    const alpha: number[] = [];
+    // Arc into the corner: rises over the page and then drops into place.
+    const cx = sx * 0.18;
+    const cy = sy - H * 0.12;
+    for (let i = 0; i <= N; i++) {
+      const t = i / N;
+      if (t <= LOOP) {
+        // A full loop to the right of the center, going up first.
+        const u = easeInOut(t / LOOP);
+        const a = Math.PI + 2 * Math.PI * u;
+        xs.push(sx + R + R * Math.cos(a));
+        ys.push(sy + R * 0.85 * Math.sin(a));
+        rot.push(360 * u);
+        scale.push(0.3 + 1.05 * Math.sin(Math.min(1, (t / LOOP) * 1.15) * (Math.PI / 2)));
+      } else {
+        const u = easeOut((t - LOOP) / (1 - LOOP));
+        const m = 1 - u;
+        xs.push(m * m * sx + 2 * m * u * cx);
+        ys.push(m * m * sy + 2 * m * u * cy);
+        // Leans into the dive, then straightens up as he arrives.
+        rot.push(360 + Math.sin(u * Math.PI) * 18);
+        scale.push(1.35 - 0.35 * u);
+      }
+      alpha.push(Math.min(1, t / 0.06));
+    }
+    const options = { duration: W < 768 ? 2.5 : 2.9, ease: 'linear' as const };
+    const controls = [
+      animate(flyX, xs, options),
+      animate(flyY, ys, options),
+      animate(flyR, rot, options),
+      animate(flyS, scale, options),
+      animate(flyO, alpha, options),
+    ];
+    let cancelled = false;
+    controls[0].then(() => {
+      if (cancelled) return;
+      flyR.jump(0);
+      // Touchdown: a small bounce, a smile and a wave, then he says hi.
+      animate(hop, [0, -16, 0, -5, 0], { duration: 0.75, times: [0, 0.3, 0.6, 0.8, 1], ease: 'easeOut' });
+      express('happy', 1300);
+      waveHandRef.current();
+      state.current.landed = true;
+      setLanded(true);
+    });
+    return () => {
+      cancelled = true;
+      controls.forEach((c) => c.stop());
+    };
+  }, [ready, flyX, flyY, flyR, flyS, flyO, hop, express]);
+
+  /* ───────── Greeting on every page, then a comment per section ───────── */
+  useEffect(() => {
+    if (!landed) return;
     talk.current.said.clear();
     talk.current.last = -1e9;
     const id = window.setTimeout(() => {
       if (sayRef.current(onProject ? 'project' : 'home', onProject ? ['demo', 'question'] : ['price', 'projects'])) {
         waveHandRef.current();
       }
-    }, onHome ? 2600 : 1800);
+    }, 900);
     return () => window.clearTimeout(id);
-  }, [ready, pathname, onProject, onHome]);
+  }, [landed, pathname, onProject]);
 
   useEffect(() => {
     if (!ready) return;
@@ -492,7 +570,7 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
 
   function goTo(id: string) {
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    if (el) el.scrollIntoView({ behavior: calm ? 'auto' : 'smooth', block: 'start' });
     else window.location.assign(`${home}#${id}`);
   }
 
@@ -521,17 +599,17 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
       if (open) setPanel(false);
       express('dizzy', 1700);
       say('dizzy', labels.dizzy, [], { force: true, ms: 2400, quiet: true });
-      if (!reduce) animate(spin, [0, 360], { duration: 0.9, ease: [0.3, 0, 0.2, 1] }).then(() => spin.jump(0));
+      animate(spin, [0, 360], { duration: 0.9, ease: [0.3, 0, 0.2, 1] }).then(() => spin.jump(0));
       return;
     }
-    if (!reduce) animate(hop, [0, -11, 0], { duration: 0.55, ease: 'easeOut' });
+    animate(hop, [0, -11, 0], { duration: 0.55, ease: 'easeOut' });
     setPanel(!open);
   }
 
   function onEnter(e: React.PointerEvent) {
     if (e.pointerType !== 'mouse' || open || state.current.busy) return;
     express('happy', 1000);
-    if (!reduce) animate(wave, [0, -120, -95, -125, 0], { duration: 1.3, ease: 'easeInOut' });
+    animate(wave, [0, -120, -95, -125, 0], { duration: 1.3, ease: 'easeInOut' });
     if (!bubble) {
       const lines = labels.hover;
       say(`hover-${talk.current.seq}`, lines[Math.floor(Math.random() * lines.length)], [], { force: true, ms: 3800, quiet: true });
@@ -540,7 +618,7 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
 
   const contactHref = onProject ? '#interesse' : onHome ? '#contato' : `${home}#contato`;
   const projectsHref = onHome ? '#projetos' : `${home}#projetos`;
-  const visible = ready && !typing;
+  const visible = !typing;
   const glass =
     'border border-[var(--border)] bg-[color-mix(in_srgb,var(--background)_88%,transparent)] backdrop-blur-xl backdrop-saturate-150';
 
@@ -736,6 +814,7 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
         </AnimatePresence>
       </div>
 
+      <motion.div style={{ x: flyX, y: flyY, rotate: flyR, scale: flyS, opacity: flyO, pointerEvents: landed ? 'auto' : 'none' }}>
       <button
         ref={buttonRef}
         type="button"
@@ -745,10 +824,11 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         title={open ? undefined : labels.open}
-        className="pointer-events-auto block h-[100px] w-[82px] cursor-pointer touch-manipulation select-none rounded-full outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-[var(--accent)] md:h-[140px] md:w-[116px]"
+        className={`${landed ? 'pointer-events-auto' : 'pointer-events-none'} block h-[100px] w-[82px] cursor-pointer touch-manipulation select-none rounded-full outline-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-2 focus-visible:ring-[var(--accent)] md:h-[140px] md:w-[116px]`}
       >
         <AstronautFigure motion={motionValues} expression={expression} blinking={blinking} />
       </button>
+      </motion.div>
     </div>
   );
 }
