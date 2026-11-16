@@ -47,6 +47,7 @@ function clickLabel(name: string) {
   const [kind, slug] = name.split(':');
   if (kind === 'project_live') return `Sistema no ar: ${slug}`;
   if (kind === 'project_repo') return `Código: ${slug}`;
+  if (kind === 'mascot_chip') return `Astronauta, resposta rápida: ${slug}`;
   return name;
 }
 

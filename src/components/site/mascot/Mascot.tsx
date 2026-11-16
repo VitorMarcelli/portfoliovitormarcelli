@@ -26,24 +26,47 @@ interface Props {
   whatsappHref: string | null;
 }
 
-type TipKey = keyof Dictionary['mascot']['tips'];
+type LineKey = keyof Dictionary['mascot']['lines'];
+type ChipKey = keyof Dictionary['mascot']['chips'];
 
-const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
-const SLEEP_AFTER = 28000;
-const TIP_SECTIONS: TipKey[] = ['projetos', 'perguntas', 'contato', 'interesse'];
-const MAX_TIPS = 2;
-
-function sessionFlag(key: string, write = false): boolean {
-  try {
-    if (write) sessionStorage.setItem(key, '1');
-    return sessionStorage.getItem(key) === '1';
-  } catch {
-    return false;
-  }
+interface Bubble {
+  id: number;
+  text: string;
+  chips: ChipKey[];
+  typing: boolean;
 }
 
+const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
+const SLEEP_AFTER = 32000;
+const IDLE_AFTER = 14000;
+
+/** Quick replies that open a specific frequent question (matched by its wording, PT or EN). */
+const FAQ_MATCH: Partial<Record<ChipKey, RegExp>> = {
+  price: /custa|cost/i,
+  time: /tempo|long/i,
+  payment: /pagamento|payment/i,
+  ready: /prontos|ready-made/i,
+  integrate: /integrar|integrate/i,
+  safety: /seguros|safe/i,
+};
+
+/** What he says when each part of the page has been on screen for a moment. */
+const SECTION_LINES: { id: string; line: LineKey; chips: ChipKey[] }[] = [
+  { id: 'projetos', line: 'projetos', chips: ['ready', 'price'] },
+  { id: 'sobre', line: 'sobre', chips: ['projects'] },
+  { id: 'servicos', line: 'servicos', chips: ['price', 'time'] },
+  { id: 'ferramentas', line: 'ferramentas', chips: ['integrate'] },
+  { id: 'metodo', line: 'metodo', chips: ['payment', 'time'] },
+  { id: 'depoimentos', line: 'depoimentos', chips: ['projects'] },
+  { id: 'perguntas', line: 'perguntas', chips: ['faqs'] },
+  { id: 'contato', line: 'contato', chips: ['whatsapp'] },
+  { id: 'como-funciona', line: 'comoFunciona', chips: ['demo', 'safety'] },
+  { id: 'galeria-titulo', line: 'galeria', chips: ['demo'] },
+  { id: 'interesse', line: 'interesse', chips: ['question'] },
+];
+
 /**
- * Mini astronaut that floats in the corner and answers frequent questions.
+ * Astro, the mini astronaut that floats in the corner and talks to visitors about frequent questions.
  * Motion is layered springs: helmet, face, pupils and visor reflection follow the pointer at different
  * depths (parallax), while legs and antenna lag behind like inertia in zero gravity.
  */
@@ -59,15 +82,27 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
   const [open, setOpen] = useState(false);
   const [expression, setExpression] = useState<Expression>('normal');
   const [blinking, setBlinking] = useState(false);
-  const [bubble, setBubble] = useState<string | null>(null);
+  const [bubble, setBubble] = useState<Bubble | null>(null);
   const [answer, setAnswer] = useState<Faq | null>(null);
   const [typing, setTyping] = useState(false);
 
   const buttonRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const timers = useRef<number[]>([]);
-  const state = useRef({ lastPointer: -1e9, lastActive: 0, sleeping: false, open: false, clicks: 0, clickAt: 0, busy: false });
+  const state = useRef({
+    lastPointer: -1e9,
+    lastActive: 0,
+    sleeping: false,
+    dozing: false,
+    open: false,
+    typing: false,
+    clicks: 0,
+    clickAt: 0,
+    busy: false,
+  });
+  const talk = useRef({ last: -1e9, said: new Set<string>(), seq: 0, hovered: false });
   const exprTimer = useRef<number | undefined>(undefined);
+  const hideTimer = useRef<number | undefined>(undefined);
 
   const later = useCallback((fn: () => void, ms: number) => {
     timers.current.push(window.setTimeout(fn, ms));
@@ -134,11 +169,84 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
     }
   }, []);
 
+  const waveHand = useCallback(() => {
+    if (!reduce) animate(wave, [0, -120, -95, -125, -95, 0], { duration: 1.7, ease: 'easeInOut' });
+  }, [reduce, wave]);
+
+  const waveHandRef = useRef(waveHand);
+  useEffect(() => {
+    waveHandRef.current = waveHand;
+  }, [waveHand]);
+
+  /* ───────── Talking ───────── */
+  const hideLater = useCallback((id: number, ms: number) => {
+    window.clearTimeout(hideTimer.current);
+    const tick = () => {
+      // Never pulls the text away while the visitor is reading it with the mouse on top.
+      if (talk.current.hovered) {
+        hideTimer.current = window.setTimeout(tick, 1500);
+        return;
+      }
+      setBubble((b) => (b?.id === id ? null : b));
+    };
+    hideTimer.current = window.setTimeout(tick, ms);
+  }, []);
+
+  const usableChips = useCallback(
+    (chips: ChipKey[]) =>
+      chips.filter((c) => {
+        if (c === 'whatsapp') return Boolean(whatsappHref);
+        if (c === 'demo') return onProject;
+        if (c === 'faqs') return faqs.length > 0;
+        const re = FAQ_MATCH[c];
+        return re ? faqs.some((f) => re.test(f.question)) : true;
+      }),
+    [faqs, whatsappHref, onProject],
+  );
+
+  /**
+   * Says a line (once per page, with a pause between lines so he never floods the screen).
+   * `force` skips both rules, for direct reactions like waking up.
+   */
+  const say = useCallback(
+    (key: string, text: string, chips: ChipKey[] = [], opts: { force?: boolean; ms?: number; quiet?: boolean } = {}) => {
+      const now = performance.now();
+      const t = talk.current;
+      if (state.current.open || state.current.typing) return false;
+      const gap = window.matchMedia('(pointer: coarse)').matches ? 20000 : 14000;
+      if (!opts.force && (t.said.has(key) || now - t.last < gap)) return false;
+      t.said.add(key);
+      t.last = now;
+      const id = ++t.seq;
+      const list = usableChips(chips);
+      setBubble({ id, text, chips: list, typing: !reduce });
+      if (!reduce) later(() => setBubble((b) => (b?.id === id ? { ...b, typing: false } : b)), 700 + Math.min(text.length * 8, 600));
+      hideLater(id, opts.ms ?? (list.length ? 11000 : 7500));
+      if (!opts.quiet && !state.current.sleeping) express('happy', 900);
+      return true;
+    },
+    [usableChips, reduce, later, hideLater, express],
+  );
+
+  const sayLine = useCallback(
+    (line: LineKey, chips: ChipKey[] = [], opts?: { force?: boolean; ms?: number; quiet?: boolean }) =>
+      say(line, labels.lines[line], chips, opts),
+    [say, labels],
+  );
+
+  const sayRef = useRef(sayLine);
+  useEffect(() => {
+    sayRef.current = sayLine;
+  }, [sayLine]);
+
   const wake = useCallback(() => {
-    state.current.lastActive = performance.now();
-    if (state.current.sleeping) {
-      state.current.sleeping = false;
+    const s = state.current;
+    s.lastActive = performance.now();
+    s.dozing = false;
+    if (s.sleeping) {
+      s.sleeping = false;
       express('surprised', 750);
+      sayRef.current('wake', [], { force: true, ms: 3200, quiet: true });
     }
   }, [express]);
 
@@ -162,6 +270,7 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
     return () => {
       list.forEach(window.clearTimeout);
       window.clearTimeout(exprTimer.current);
+      window.clearTimeout(hideTimer.current);
     };
   }, []);
 
@@ -215,14 +324,24 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
       }
     }, 2900);
 
-    // Falls asleep when the page is left alone.
-    const sleepCheck = window.setInterval(() => {
-      if (state.current.open || state.current.sleeping || state.current.busy) return;
-      if (performance.now() - state.current.lastActive > SLEEP_AFTER) {
-        state.current.sleeping = true;
-        lookX.set(0);
-        lookY.set(0.55);
-        setExpression('sleep');
+    // Quiet page: first he offers help, later he says goodbye and dozes off.
+    const idleCheck = window.setInterval(() => {
+      const s = state.current;
+      if (s.open || s.sleeping || s.busy || s.dozing) return;
+      const quiet = performance.now() - s.lastActive;
+      if (quiet > IDLE_AFTER && quiet < SLEEP_AFTER && performance.now() - talk.current.last > 24000) {
+        if (sayRef.current('idle', ['price', 'whatsapp'])) waveHandRef.current();
+      } else if (quiet >= SLEEP_AFTER) {
+        s.dozing = true;
+        sayRef.current('sleep', [], { force: true, ms: 2800, quiet: true });
+        window.setTimeout(() => {
+          if (!s.dozing) return;
+          s.dozing = false;
+          s.sleeping = true;
+          lookX.set(0);
+          lookY.set(0.55);
+          setExpression('sleep');
+        }, 2600);
       }
     }, 2000);
 
@@ -231,7 +350,7 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('touchstart', onTouch);
       window.clearInterval(wander);
-      window.clearInterval(sleepCheck);
+      window.clearInterval(idleCheck);
       window.clearTimeout(scrollTimer);
     };
   }, [lookX, lookY, wake]);
@@ -261,9 +380,16 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
     const coarse = window.matchMedia('(pointer: coarse)');
     const onFocus = (e: FocusEvent) => {
       const t = e.target as HTMLElement | null;
-      if (coarse.matches && t?.matches('input, textarea, select') && !panelRef.current?.contains(t)) setTyping(true);
+      if (coarse.matches && t?.matches('input, textarea, select') && !panelRef.current?.contains(t)) {
+        state.current.typing = true;
+        setTyping(true);
+        setBubble(null);
+      }
     };
-    const onBlur = () => setTyping(false);
+    const onBlur = () => {
+      state.current.typing = false;
+      setTyping(false);
+    };
     document.addEventListener('focusin', onFocus);
     document.addEventListener('focusout', onBlur);
     return () => {
@@ -272,61 +398,41 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
     };
   }, []);
 
-  /* ───────── Speech bubbles: one greeting, then a tip per section (few per visit) ───────── */
-  const say = useCallback(
-    (text: string, ms = 6000) => {
-      setBubble(text);
-      later(() => setBubble((b) => (b === text ? null : b)), ms);
-    },
-    [later],
-  );
-
+  /* ───────── Greeting on every page, then a comment per section ───────── */
   useEffect(() => {
-    if (!ready || sessionFlag('vm_mascot_greet')) return;
+    if (!ready) return;
+    talk.current.said.clear();
+    talk.current.last = -1e9;
     const id = window.setTimeout(() => {
-      if (state.current.open) return;
-      sessionFlag('vm_mascot_greet', true);
-      const mouse = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-      say(mouse ? labels.greetingMouse : labels.greetingTouch);
-      express('happy', 1200);
-      if (!reduce) animate(wave, [0, -120, -95, -125, -95, 0], { duration: 1.7, ease: 'easeInOut' });
-    }, 4200);
+      if (sayRef.current(onProject ? 'project' : 'home', onProject ? ['demo', 'question'] : ['price', 'projects'])) {
+        waveHandRef.current();
+      }
+    }, onHome ? 2600 : 1800);
     return () => window.clearTimeout(id);
-  }, [ready, labels, say, express, reduce, wave]);
+  }, [ready, pathname, onProject, onHome]);
 
   useEffect(() => {
     if (!ready) return;
-    const shown = (): string[] => {
-      try {
-        return JSON.parse(sessionStorage.getItem('vm_mascot_tips') || '[]');
-      } catch {
-        return [];
-      }
-    };
     const dwell = new Map<string, number>();
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          const key = entry.target.id as TipKey;
-          window.clearTimeout(dwell.get(key));
+          const id = entry.target.id;
+          window.clearTimeout(dwell.get(id));
           if (!entry.isIntersecting) continue;
-          dwell.set(
-            key,
-            window.setTimeout(() => {
-              const done = shown();
-              if (state.current.open || done.includes(key) || done.length >= MAX_TIPS) return;
-              try {
-                sessionStorage.setItem('vm_mascot_tips', JSON.stringify([...done, key]));
-              } catch {}
-              say(labels.tips[key], 6500);
-              express('happy', 900);
-            }, 4500),
-          );
+          const spec = SECTION_LINES.find((s) => s.id === id);
+          if (!spec) continue;
+          // If he is still in the pause after his last line, he tries again while the section stays on screen.
+          const attempt = () => {
+            if (sayRef.current(spec.line, spec.chips) || talk.current.said.has(spec.line)) return;
+            dwell.set(id, window.setTimeout(attempt, 2500));
+          };
+          dwell.set(id, window.setTimeout(attempt, 2200));
         }
       },
-      { threshold: 0.35 },
+      { threshold: 0.3 },
     );
-    TIP_SECTIONS.forEach((id) => {
+    SECTION_LINES.forEach(({ id }) => {
       const el = document.getElementById(id);
       if (el) observer.observe(el);
     });
@@ -334,20 +440,31 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
       observer.disconnect();
       dwell.forEach((t) => window.clearTimeout(t));
     };
-  }, [ready, pathname, labels, say, express]);
+  }, [ready, pathname]);
+
+  // Mouse heading out of the window: one last offer.
+  useEffect(() => {
+    if (!ready) return;
+    const onOut = (e: MouseEvent) => {
+      if (e.relatedTarget || e.clientY > 8) return;
+      sayRef.current('exit', whatsappHref ? ['whatsapp'] : ['question'], { ms: 9000 });
+    };
+    document.addEventListener('mouseout', onOut);
+    return () => document.removeEventListener('mouseout', onOut);
+  }, [ready, whatsappHref]);
 
   /* ───────── Panel ───────── */
   const setPanel = useCallback(
-    (next: boolean) => {
+    (next: boolean, faq: Faq | null = null) => {
       state.current.open = next;
       setOpen(next);
       setBubble(null);
       if (next) {
-        setAnswer(null);
+        setAnswer(faq);
         lookX.set(-0.3);
         lookY.set(-0.9);
         express('happy', 900);
-        track('click', 'mascot_open');
+        track('click', faq ? 'mascot_faq' : 'mascot_open');
       } else {
         lookY.set(0);
         buttonRef.current?.focus({ preventScroll: true });
@@ -373,6 +490,26 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
     };
   }, [open, setPanel]);
 
+  function goTo(id: string) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    else window.location.assign(`${home}#${id}`);
+  }
+
+  function runChip(chip: ChipKey) {
+    track('click', `mascot_chip:${chip}`);
+    setBubble(null);
+    if (chip === 'whatsapp' && whatsappHref) {
+      track('click', 'whatsapp_mascot');
+      window.open(whatsappHref, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    if (chip === 'projects') return goTo('projetos');
+    if (chip === 'demo') return goTo('interesse');
+    const re = FAQ_MATCH[chip];
+    setPanel(true, re ? (faqs.find((f) => re.test(f.question)) ?? null) : null);
+  }
+
   function onClick() {
     wake();
     const s = state.current;
@@ -383,7 +520,7 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
       s.clicks = 0;
       if (open) setPanel(false);
       express('dizzy', 1700);
-      say(labels.dizzy, 2200);
+      say('dizzy', labels.dizzy, [], { force: true, ms: 2400, quiet: true });
       if (!reduce) animate(spin, [0, 360], { duration: 0.9, ease: [0.3, 0, 0.2, 1] }).then(() => spin.jump(0));
       return;
     }
@@ -395,16 +532,17 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
     if (e.pointerType !== 'mouse' || open || state.current.busy) return;
     express('happy', 1000);
     if (!reduce) animate(wave, [0, -120, -95, -125, 0], { duration: 1.3, ease: 'easeInOut' });
-  }
-
-  function chooseFaq(faq: Faq) {
-    setAnswer(faq);
-    track('click', 'mascot_faq');
+    if (!bubble) {
+      const lines = labels.hover;
+      say(`hover-${talk.current.seq}`, lines[Math.floor(Math.random() * lines.length)], [], { force: true, ms: 3800, quiet: true });
+    }
   }
 
   const contactHref = onProject ? '#interesse' : onHome ? '#contato' : `${home}#contato`;
   const projectsHref = onHome ? '#projetos' : `${home}#projetos`;
   const visible = ready && !typing;
+  const glass =
+    'border border-[var(--border)] bg-[color-mix(in_srgb,var(--background)_88%,transparent)] backdrop-blur-xl backdrop-saturate-150';
 
   return (
     <div
@@ -423,7 +561,7 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
             exit={{ opacity: 0, y: 10, scale: 0.96 }}
             transition={{ type: 'spring', stiffness: 380, damping: 30 }}
             style={{ transformOrigin: 'bottom right' }}
-            className="pointer-events-auto mb-2 mr-1 flex max-h-[min(70vh,560px)] w-[min(calc(100vw-1.5rem),360px)] flex-col overflow-hidden rounded-3xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--background)_86%,transparent)] shadow-[0_24px_70px_-20px_var(--glow)] backdrop-blur-xl backdrop-saturate-150"
+            className={`${glass} pointer-events-auto mb-2 mr-1 flex max-h-[min(70vh,560px)] w-[min(calc(100vw-1.5rem),360px)] flex-col overflow-hidden rounded-3xl shadow-[0_24px_70px_-20px_var(--glow)]`}
           >
             <div className="flex items-start justify-between gap-3 border-b border-[var(--border)] px-5 pb-3.5 pt-4">
               <div>
@@ -453,11 +591,7 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
                     transition={{ duration: 0.22 }}
                     className="px-2"
                   >
-                    <button
-                      type="button"
-                      onClick={() => setAnswer(null)}
-                      className="text-sm text-accent-text underline-offset-4 hover:underline"
-                    >
+                    <button type="button" onClick={() => setAnswer(null)} className="text-sm text-accent-text underline-offset-4 hover:underline">
                       ← {labels.back}
                     </button>
                     <p className="mt-3 font-display font-semibold">{answer.question}</p>
@@ -489,7 +623,10 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
                             <li key={faq.id}>
                               <button
                                 type="button"
-                                onClick={() => chooseFaq(faq)}
+                                onClick={() => {
+                                  setAnswer(faq);
+                                  track('click', 'mascot_faq');
+                                }}
                                 className="flex w-full items-center justify-between gap-3 rounded-2xl px-3 py-2.5 text-left transition-colors hover:bg-[var(--surface-2)]"
                               >
                                 <span>{faq.question}</span>
@@ -538,27 +675,66 @@ export default function Mascot({ locale, labels, faqs, whatsappHref }: Props) {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {bubble && !open && (
-          <motion.button
-            type="button"
-            key={bubble}
-            onClick={() => setPanel(true)}
-            initial={{ opacity: 0, y: 8, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.95 }}
-            transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-            style={{ transformOrigin: 'bottom right' }}
-            className="pointer-events-auto relative mb-1 mr-3 max-w-[15rem] rounded-2xl border border-[var(--border)] bg-[color-mix(in_srgb,var(--background)_88%,transparent)] px-3.5 py-2 text-left text-sm shadow-[0_14px_40px_-14px_var(--glow)] backdrop-blur-xl"
-          >
-            {bubble}
-            <span
-              aria-hidden="true"
-              className="absolute -bottom-[6px] right-8 h-3 w-3 rotate-45 border-b border-r border-[var(--border)] bg-[color-mix(in_srgb,var(--background)_88%,transparent)]"
-            />
-          </motion.button>
-        )}
-      </AnimatePresence>
+      <div aria-live="polite" className="contents">
+        <AnimatePresence>
+          {bubble && !open && (
+            <motion.div
+              key={bubble.id}
+              layout
+              onPointerEnter={() => (talk.current.hovered = true)}
+              onPointerLeave={() => (talk.current.hovered = false)}
+              initial={{ opacity: 0, y: 10, scale: 0.85 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 6, scale: 0.92 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+              style={{ transformOrigin: 'bottom right' }}
+              className={`${glass} pointer-events-auto relative mb-1.5 mr-3 max-w-[min(calc(100vw-2.5rem),18rem)] rounded-2xl px-3.5 py-2.5 text-sm shadow-[0_14px_40px_-14px_var(--glow)]`}
+            >
+              <button
+                type="button"
+                onClick={() => setBubble(null)}
+                aria-label={labels.dismiss}
+                className={`${glass} absolute -left-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full text-muted transition-colors hover:text-foreground`}
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" aria-hidden="true">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+              {bubble.typing ? (
+                <span className="mascot-typing flex h-5 items-center gap-1 px-1" aria-label={labels.typing}>
+                  <i />
+                  <i />
+                  <i />
+                </span>
+              ) : (
+                <>
+                  <button type="button" onClick={() => setPanel(true)} className="block text-left leading-snug">
+                    {bubble.text}
+                  </button>
+                  {bubble.chips.length > 0 && (
+                    <span className="mt-2 flex flex-wrap gap-1.5">
+                      {bubble.chips.map((chip) => (
+                        <button
+                          key={chip}
+                          type="button"
+                          onClick={() => runChip(chip)}
+                          className="rounded-full border border-accent/40 bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent-text transition-colors hover:bg-accent/20"
+                        >
+                          {labels.chips[chip]}
+                        </button>
+                      ))}
+                    </span>
+                  )}
+                </>
+              )}
+              <span
+                aria-hidden="true"
+                className="absolute -bottom-[6px] right-8 h-3 w-3 rotate-45 border-b border-r border-[var(--border)] bg-[color-mix(in_srgb,var(--background)_88%,transparent)]"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       <button
         ref={buttonRef}
