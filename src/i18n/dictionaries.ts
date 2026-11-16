@@ -133,6 +133,7 @@ const pt = {
   },
   stack: {
     title: 'Ferramentas',
+    orbitHint: 'Toque ou passe o mouse num grupo para acender a órbita dele',
     groups: [
       { label: 'Interface', items: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Astro'] },
       { label: 'Mobile e desktop', items: ['React Native', 'Expo', 'Flutter', 'Tauri'] },
@@ -181,6 +182,7 @@ const pt = {
       submit: 'Enviar mensagem',
       sending: 'Enviando…',
       success: 'Mensagem enviada. Respondo em até um dia útil.',
+      successTitle: 'Sinal recebido',
       error: 'Não foi possível enviar agora. Tente de novo ou me chame no WhatsApp.',
       invalid: 'Preencha nome, e-mail válido e uma mensagem com pelo menos 10 caracteres.',
       intentLabel: 'O que você procura?',
@@ -206,6 +208,8 @@ const pt = {
   },
   footer: {
     rights: 'Todos os direitos reservados.',
+    backToTop: 'Voltar ao topo',
+    tagline: 'Sistemas que trabalham sozinhos.',
     admin: 'Área restrita',
   },
   notFound: {
@@ -337,6 +341,7 @@ const en: Dictionary = {
   },
   stack: {
     title: 'Tools',
+    orbitHint: 'Tap or hover a group to light up its orbit',
     groups: [
       { label: 'Interface', items: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Astro'] },
       { label: 'Mobile and desktop', items: ['React Native', 'Expo', 'Flutter', 'Tauri'] },
@@ -384,6 +389,7 @@ const en: Dictionary = {
       submit: 'Send message',
       sending: 'Sending…',
       success: 'Message sent. I reply within one business day.',
+      successTitle: 'Signal received',
       error: 'Could not send right now. Try again or message me on WhatsApp.',
       invalid: 'Fill in your name, a valid email and a message of at least 10 characters.',
       intentLabel: 'What are you looking for?',
@@ -409,6 +415,8 @@ const en: Dictionary = {
   },
   footer: {
     rights: 'All rights reserved.',
+    backToTop: 'Back to top',
+    tagline: 'Systems that run on their own.',
     admin: 'Admin',
   },
   notFound: {

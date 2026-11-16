@@ -23,10 +23,21 @@ export default function ContactForm({ t, project, defaultIntent = 'contato' }: C
   const intents: Intent[] = project?.forSale ? ['compra', 'demonstracao', 'contato'] : ['demonstracao', 'contato'];
 
   if (state.status === 'success') {
+    // The message "leaves" as a beam of light toward the sky, then the confirmation settles in.
     return (
-      <p role="status" className="rounded-lg border border-success/40 bg-success/10 p-6 text-lg text-foreground">
-        {t.success}
-      </p>
+      <div role="status" className="relative flex min-h-[280px] flex-col items-center justify-center overflow-visible text-center">
+        <span className="signal-beam" aria-hidden="true" />
+        <span
+          className="relative h-4 w-4 rounded-full bg-white shadow-[0_0_24px_8px_var(--glow),0_0_6px_var(--beam)]"
+          aria-hidden="true"
+        />
+        <p className="rise mt-8 font-display text-3xl font-bold" style={{ animationDelay: '0.9s' }}>
+          <span className="night-gradient">{t.successTitle}</span>
+        </p>
+        <p className="rise mt-3 max-w-sm text-lg text-muted" style={{ animationDelay: '1.1s' }}>
+          {t.success}
+        </p>
+      </div>
     );
   }
 

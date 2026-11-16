@@ -6,6 +6,7 @@ import ThemeKeeper from '@/components/ThemeKeeper';
 import ThemeScript from '@/components/ThemeScript';
 import IntroScrollScript from '@/components/site/IntroScrollScript';
 import SiteFooter from '@/components/site/SiteFooter';
+import Spotlight from '@/components/site/Spotlight';
 import Tracker from '@/components/site/Tracker';
 import SiteDock from '@/components/site/Dock';
 import NightSceneLoader from '@/components/site/NightSceneLoader';
@@ -99,6 +100,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
         <RevealObserver />
         <ThemeKeeper />
         <Tracker />
+        <Spotlight />
       </body>
     </html>
   );

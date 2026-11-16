@@ -2,11 +2,14 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { CSSProperties, ReactNode } from 'react';
 import ContactForm from '@/components/site/ContactForm';
+import FlightRoute from '@/components/site/FlightRoute';
 import HomeHero from '@/components/site/HomeHero';
 import ProjectBadges, { LockIcon } from '@/components/site/ProjectBadges';
 import ProjectFlow from '@/components/site/ProjectFlow';
 import ProjectSky, { type SkyStar } from '@/components/site/ProjectSky';
 import RevealTitle from '@/components/site/RevealTitle';
+import ServiceArt from '@/components/site/ServiceArt';
+import StackOrbit from '@/components/site/StackOrbit';
 import TrackedLink from '@/components/site/TrackedLink';
 import WelcomeLoader from '@/components/site/WelcomeLoader';
 import { getDictionary, isLocale, localePath, type Dictionary } from '@/i18n/dictionaries';
@@ -232,13 +235,13 @@ function About({ t }: { t: Dictionary }) {
 
 function Services({ t }: { t: Dictionary }) {
   return (
-    <NightSection id="servicos" labelledBy="servicos-titulo" scene={{ x: 0.62, scale: 0.4 }}>
+    <NightSection id="servicos" labelledBy="servicos-titulo" scene={{ x: 0.95, y: -0.35, scale: 0.22 }}>
       <SectionHeader id="servicos-titulo" title={t.services.title} />
       <div className="grid gap-6 sm:grid-cols-2">
         {t.services.items.map((s, i) => (
-          <div key={s.title} data-reveal style={reveal((i % 2) * 120)} className="glow-card p-7 sm:p-8">
-            <span className="block h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_14px_var(--glow)]" aria-hidden="true" />
-            <h3 className="mt-5 font-display text-2xl font-semibold tracking-tight">{s.title}</h3>
+          <div key={s.title} data-reveal data-spotlight style={reveal((i % 2) * 120)} className="glow-card overflow-hidden p-7 sm:p-8">
+            <ServiceArt index={i} />
+            <h3 className="mt-6 font-display text-2xl font-semibold tracking-tight">{s.title}</h3>
             <p className="mt-3 text-lg leading-relaxed text-muted">{s.description}</p>
             <p className="mt-5 text-sm">
               <span className="text-muted">{t.services.proofLabel}: </span>
@@ -318,22 +321,10 @@ function Career({
 
 function Stack({ t }: { t: Dictionary }) {
   return (
-    <NightSection id="ferramentas" labelledBy="ferramentas-titulo" scene={{ x: 0.62, scale: 0.38 }}>
+    <NightSection id="ferramentas" labelledBy="ferramentas-titulo" scene={{ x: 0.95, y: -0.4, scale: 0.2 }}>
       <SectionHeader id="ferramentas-titulo" title={t.stack.title} />
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {t.stack.groups.map((g, i) => (
-          <div
-            key={g.label}
-            data-reveal
-            style={reveal((i % 3) * 110)}
-            className={`glow-card p-7 ${i === 0 ? 'lg:col-span-2' : ''}`}
-          >
-            <h3 className="font-display text-xl font-semibold">{g.label}</h3>
-            <div className="mt-5">
-              <Chips items={g.items} />
-            </div>
-          </div>
-        ))}
+      <div data-reveal>
+        <StackOrbit groups={t.stack.groups} hint={t.stack.orbitHint} />
       </div>
     </NightSection>
   );
@@ -341,19 +332,9 @@ function Stack({ t }: { t: Dictionary }) {
 
 function Approach({ t }: { t: Dictionary }) {
   return (
-    <NightSection id="metodo" labelledBy="metodo-titulo" scene={{ x: -0.62, scale: 0.38 }}>
+    <NightSection id="metodo" labelledBy="metodo-titulo" scene={{ x: -0.95, y: -0.35, scale: 0.22 }}>
       <SectionHeader id="metodo-titulo" title={t.approach.title} />
-      <ol className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {t.approach.items.map((item, i) => (
-          <li key={item.title} data-reveal style={reveal(i * 110)} className="glow-card p-7">
-            <span className="night-gradient font-display text-5xl font-bold" aria-hidden="true">
-              {i + 1}
-            </span>
-            <h3 className="mt-4 text-lg font-semibold">{item.title}</h3>
-            <p className="mt-2 leading-relaxed text-muted">{item.description}</p>
-          </li>
-        ))}
-      </ol>
+      <FlightRoute steps={t.approach.items} />
     </NightSection>
   );
 }
@@ -362,7 +343,7 @@ function Contact({ t, settings }: { t: Dictionary; settings: PublicSettings }) {
   const wa = settings.whatsappNumber ? whatsappLink(settings.whatsappNumber, t.contact.whatsappMessage) : null;
 
   return (
-    <NightSection id="contato" labelledBy="contato-titulo" scene={{ x: 0.62, y: 0.55, scale: 0.35 }}>
+    <NightSection id="contato" labelledBy="contato-titulo" scene={{ x: 0.95, y: 0.6, scale: 0.22 }}>
       <div className="grid gap-6 lg:grid-cols-12">
         <div data-reveal className="glow-card p-7 sm:p-9 lg:col-span-5">
           <RevealTitle
@@ -406,9 +387,17 @@ function Contact({ t, settings }: { t: Dictionary; settings: PublicSettings }) {
             </ul>
           </div>
         </div>
-        <div data-reveal style={reveal(150)} className="glow-card p-7 sm:p-9 lg:col-span-7">
-          <p className="mb-6 text-sm font-semibold text-muted">{t.contact.or}</p>
-          <ContactForm t={t.contact.form} />
+        <div data-reveal style={reveal(150)} className="relative lg:col-span-7">
+          {/* Radio waves leaving the station: the form "transmits" from here. */}
+          <div className="pointer-events-none absolute inset-0 overflow-visible" aria-hidden="true">
+            {[0, 2, 4].map((d) => (
+              <span key={d} className="signal-wave" style={{ '--d': `${d}s` } as CSSProperties} />
+            ))}
+          </div>
+          <div data-spotlight className="glow-card h-full p-7 sm:p-9">
+            <p className="mb-6 text-sm font-semibold text-muted">{t.contact.or}</p>
+            <ContactForm t={t.contact.form} />
+          </div>
         </div>
       </div>
     </NightSection>

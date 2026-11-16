@@ -466,3 +466,123 @@ body {
   0% { transform: scale(0.6); opacity: 0.9; }
   100% { transform: scale(2.4); opacity: 0; }
 }
+
+/* ───────────────────────── Spotlight (glow that follows the mouse) ───────────────────────── */
+[data-spotlight]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 50%), color-mix(in srgb, var(--accent) 16%, transparent), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+[data-spotlight]:hover::after { opacity: 1; }
+
+/* ───────────────────────── Service art ───────────────────────── */
+.art-draw { stroke-dasharray: 400; stroke-dashoffset: 400; animation: art-draw 4.8s ease-in-out infinite; }
+@keyframes art-draw {
+  0% { stroke-dashoffset: 400; opacity: 1; }
+  45%, 80% { stroke-dashoffset: 0; opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+.art-bar { transform: scaleY(0.15); animation: art-bar 2.6s ease-in-out infinite alternate; }
+@keyframes art-bar { to { transform: scaleY(1); } }
+.art-type { stroke-dasharray: 60; stroke-dashoffset: 60; animation: art-type 3.6s ease-out infinite; }
+@keyframes art-type {
+  0% { stroke-dashoffset: 60; }
+  25%, 85% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+.art-check { stroke-dasharray: 40; stroke-dashoffset: 40; animation: art-check 3.6s ease-out infinite; }
+@keyframes art-check {
+  0%, 50% { stroke-dashoffset: 40; }
+  65%, 90% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+.art-pop { opacity: 0; transform-box: fill-box; transform-origin: center; animation: art-pop 4.8s ease-out infinite; }
+@keyframes art-pop {
+  0% { opacity: 0; transform: translateY(6px) scale(0.92); }
+  8%, 85% { opacity: 1; transform: none; }
+  100% { opacity: 0; }
+}
+.art-typing circle { animation: art-typing 0.9s ease-in-out infinite alternate; }
+.art-typing { animation: art-typing-window 4.8s linear infinite; }
+@keyframes art-typing { from { opacity: 0.25; } to { opacity: 1; } }
+@keyframes art-typing-window { 0%, 8% { opacity: 0; } 10%, 24% { opacity: 1; } 25%, 100% { opacity: 0; } }
+.art-scan { animation: art-scan 2.4s ease-in-out infinite alternate; filter: drop-shadow(0 0 4px var(--beam)); }
+@keyframes art-scan { from { transform: translateY(0); } to { transform: translateY(40px); } }
+.art-packet { offset-rotate: 0deg; animation: art-packet 1.8s linear infinite; filter: drop-shadow(0 0 4px var(--beam)); }
+@keyframes art-packet {
+  0% { offset-distance: 0%; opacity: 0; }
+  10%, 90% { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+/* ───────────────────────── Tools orbit ───────────────────────── */
+.orbit-ring { animation: orbit-spin var(--orbit-duration, 90s) linear infinite; animation-direction: var(--orbit-direction, normal); }
+.orbit-counter { animation: orbit-unspin var(--orbit-duration, 90s) linear infinite; animation-direction: var(--orbit-direction, normal); }
+.orbit-ring.is-paused,
+.orbit-ring.is-paused .orbit-counter { animation-play-state: paused; }
+@keyframes orbit-spin { to { transform: rotate(360deg); } }
+@keyframes orbit-unspin { to { transform: rotate(-360deg); } }
+
+/* ───────────────────────── Contact: radio waves ───────────────────────── */
+.signal-wave {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 40%;
+  aspect-ratio: 1;
+  border-radius: 9999px;
+  border: 1px solid var(--beam);
+  translate: -50% -50%;
+  opacity: 0;
+  animation: signal-wave 6s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+  animation-delay: var(--d, 0s);
+  pointer-events: none;
+}
+@keyframes signal-wave {
+  0% { scale: 0.4; opacity: 0.55; }
+  100% { scale: 3.2; opacity: 0; }
+}
+.signal-beam {
+  position: absolute;
+  left: 50%;
+  bottom: 50%;
+  width: 3px;
+  height: 0;
+  translate: -50% 0;
+  border-radius: 9999px;
+  background: linear-gradient(to top, var(--beam), transparent);
+  box-shadow: 0 0 18px 4px var(--glow);
+  animation: signal-beam 1.4s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+@keyframes signal-beam {
+  0% { height: 0; opacity: 1; }
+  70% { height: 140vh; opacity: 1; }
+  100% { height: 140vh; opacity: 0; }
+}
+
+/* ───────────────────────── Footer: giant outlined name ───────────────────────── */
+.footer-name {
+  color: transparent;
+  -webkit-text-stroke: 1.2px color-mix(in srgb, var(--accent-text) 60%, transparent);
+  background: radial-gradient(260px circle at var(--mx, -400px) var(--my, 50%), var(--beam), transparent 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+@media (hover: none) {
+  /* No mouse: a slow light sweeps across the name instead. */
+  .footer-name {
+    background: linear-gradient(100deg, transparent 30%, var(--beam) 50%, transparent 70%) 0 0 / 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    animation: footer-sweep 6s ease-in-out infinite;
+  }
+}
+@keyframes footer-sweep {
+  from { background-position: 100% 0; }
+  to { background-position: -50% 0; }
+}
