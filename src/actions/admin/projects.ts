@@ -88,6 +88,7 @@ export async function saveProject(_prev: ProjectFormState, formData: FormData): 
       .map((t) => t.trim())
       .filter(Boolean),
     live_url: liveUrl,
+    live_login: Boolean(liveUrl) && formData.get('live_login') === 'on',
     // A private repository never goes to the public table: its address lives in project_private.
     repo_url: repoPrivate ? null : repoUrl,
     repo_private: repoPrivate,

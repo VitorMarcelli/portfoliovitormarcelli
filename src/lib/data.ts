@@ -22,6 +22,7 @@ export function localizeProject(row: ProjectRow, locale: Locale): Project {
     technologies: row.technologies ?? [],
     coverUrl: row.cover_url,
     liveUrl: row.live_url,
+    liveLogin: Boolean(row.live_login),
     repoUrl: row.repo_url,
     year: row.year,
     featured: row.featured,

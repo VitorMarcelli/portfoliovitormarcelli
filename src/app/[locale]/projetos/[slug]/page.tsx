@@ -113,6 +113,12 @@ export default async function ProjectPage({ params }: PageProps<'/[locale]/proje
             </TrackedLink>
           )}
         </div>
+        {project.liveUrl && project.liveLogin && (
+          <p data-reveal className="mt-3 flex items-center gap-2 text-sm text-muted" style={reveal(400)}>
+            <LockIcon />
+            {tp.liveLoginNote}
+          </p>
+        )}
       </header>
 
       {project.coverUrl && (
@@ -206,7 +212,7 @@ export default async function ProjectPage({ params }: PageProps<'/[locale]/proje
                       <LockIcon />
                     </span>
                     {/* Only promise a demo when there is a live link to show. */}
-                    {project.liveUrl ? tp.privateCodeHint : tp.privateCodeHintNoDemo}
+                    {project.liveUrl ? (project.liveLogin ? tp.privateCodeHintLogin : tp.privateCodeHint) : tp.privateCodeHintNoDemo}
                   </span>
                 ) : (
                   project.repoUrl && (

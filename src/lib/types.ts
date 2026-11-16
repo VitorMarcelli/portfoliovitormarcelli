@@ -22,6 +22,8 @@ export interface ProjectRow {
   technologies: string[];
   cover_url: string | null;
   live_url: string | null;
+  /** The live address opens on a login screen (demo access on request). */
+  live_login: boolean;
   repo_url: string | null;
   year: number | null;
   featured: boolean;
@@ -137,6 +139,7 @@ export interface Project {
   technologies: string[];
   coverUrl: string | null;
   liveUrl: string | null;
+  liveLogin: boolean;
   repoUrl: string | null;
   year: number | null;
   featured: boolean;

@@ -158,6 +158,10 @@ export default function ProjectForm({ project, privateData }: Props) {
             <Field label="Link do sistema no ar" hint="usado também na captura automática">
               <input name="live_url" type="url" placeholder="https://" defaultValue={p?.live_url ?? ''} className={inputClass} />
             </Field>
+            <label className="flex items-center gap-3 text-sm font-medium">
+              <input type="checkbox" name="live_login" defaultChecked={p?.live_login ?? false} className={checkbox} />
+              Abre numa tela de login (o site mostra &quot;acesso de demonstração sob pedido&quot;)
+            </label>
             <Field label="Tecnologias" hint="separadas por vírgula">
               <input name="technologies" defaultValue={p?.technologies.join(', ') ?? ''} className={inputClass} />
             </Field>
