@@ -11,7 +11,8 @@ import Tracker from '@/components/site/Tracker';
 import SiteDock from '@/components/site/Dock';
 import NightSceneLoader from '@/components/site/NightSceneLoader';
 import RevealObserver from '@/components/site/RevealObserver';
-import { getPublicSettings } from '@/lib/data';
+import Mascot from '@/components/site/mascot/Mascot';
+import { getFaqs, getPublicSettings } from '@/lib/data';
 import { whatsappLink } from '@/lib/whatsapp/link';
 import { getDictionary, isLocale, localePath, locales } from '@/i18n/dictionaries';
 import { CONTACT, SITE_URL } from '@/lib/env';
@@ -59,7 +60,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const t = getDictionary(locale);
-  const settings = await getPublicSettings();
+  const [settings, faqs] = await Promise.all([getPublicSettings(), getFaqs(locale)]);
 
   const personJsonLd = {
     '@context': 'https://schema.org',
@@ -94,6 +95,12 @@ export default async function LocaleLayout({ children, params }: LayoutProps<'/[
           github={CONTACT.github}
           linkedin={CONTACT.linkedin}
           email={CONTACT.email}
+          whatsappHref={settings.whatsappNumber ? whatsappLink(settings.whatsappNumber, t.contact.whatsappMessage) : null}
+        />
+        <Mascot
+          locale={locale}
+          labels={t.mascot}
+          faqs={faqs}
           whatsappHref={settings.whatsappNumber ? whatsappLink(settings.whatsappNumber, t.contact.whatsappMessage) : null}
         />
         <NightSceneLoader />

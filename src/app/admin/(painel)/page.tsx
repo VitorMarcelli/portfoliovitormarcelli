@@ -36,6 +36,10 @@ const CLICK_LABELS: Record<string, string> = {
   email: 'E-mail',
   linkedin: 'LinkedIn',
   github: 'GitHub',
+  mascot_open: 'Astronauta: abriu a ajuda',
+  mascot_faq: 'Astronauta: leu uma resposta',
+  whatsapp_mascot: 'WhatsApp pelo astronauta',
+  whatsapp_faq: 'WhatsApp pelas perguntas',
 };
 
 function clickLabel(name: string) {
