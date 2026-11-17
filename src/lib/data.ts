@@ -16,9 +16,15 @@ import type {
   TestimonialRow,
 } from '@/lib/types';
 
+/** Every public read is kept in the data cache under one tag; the panel expires it on each save. */
+export const SITE_DATA_TAG = 'site-data';
+
 function publicClient() {
   return createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: (input, init) => fetch(input, { ...init, cache: 'force-cache', next: { revalidate: 3600, tags: [SITE_DATA_TAG] } }),
+    },
   });
 }
 

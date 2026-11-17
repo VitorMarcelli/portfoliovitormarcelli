@@ -10,16 +10,12 @@ import ProjectGallery from '@/components/site/ProjectGallery';
 import RevealTitle from '@/components/site/RevealTitle';
 import TestimonialCard from '@/components/site/TestimonialCard';
 import TrackedLink from '@/components/site/TrackedLink';
-import { getDictionary, isLocale, localePath, locales } from '@/i18n/dictionaries';
-import { getProject, getPublishedProjectRows, getTestimonials } from '@/lib/data';
+import { getDictionary, isLocale, localePath } from '@/i18n/dictionaries';
+import { getProject, getTestimonials } from '@/lib/data';
 
-export const revalidate = 3600;
-export const dynamicParams = true;
-
-export async function generateStaticParams() {
-  const rows = await getPublishedProjectRows();
-  return locales.flatMap((locale) => rows.map((row) => ({ locale, slug: row.slug })));
-}
+// Rendered per request from the data cache (tag-invalidated by the panel), never stored whole at the edge:
+// a stored page meant a project opened while still a draft stayed a cached 404 after being published.
+export const dynamic = 'force-dynamic';
 
 export async function generateMetadata({ params }: PageProps<'/[locale]/projetos/[slug]'>): Promise<Metadata> {
   const { locale, slug } = await params;
