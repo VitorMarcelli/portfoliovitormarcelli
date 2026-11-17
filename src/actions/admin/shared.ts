@@ -2,9 +2,17 @@ import 'server-only';
 import { revalidatePath } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-/** Refreshes every public page (both locales, project pages, sitemap). */
-export function revalidatePublicSite() {
+/**
+ * Refreshes every public page (both locales, project pages, sitemap).
+ * Pass the project slugs that changed: a project page opened while it was still a draft is cached as a
+ * 404, and only purging its exact address clears it (the layout-wide purge does not reach it).
+ */
+export function revalidatePublicSite(...slugs: (string | null | undefined)[]) {
   revalidatePath('/[locale]', 'layout');
+  revalidatePath('/[locale]/projetos/[slug]', 'page');
+  for (const slug of new Set(slugs.filter(Boolean))) {
+    for (const path of [`/pt/projetos/${slug}`, `/en/projetos/${slug}`, `/projetos/${slug}`]) revalidatePath(path);
+  }
   revalidatePath('/sitemap.xml');
 }
 

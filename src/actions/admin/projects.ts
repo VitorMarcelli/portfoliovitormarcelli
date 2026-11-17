@@ -114,9 +114,10 @@ export async function saveProject(_prev: ProjectFormState, formData: FormData): 
     ...(coverUrl !== undefined ? { cover_url: coverUrl } : {}),
   };
 
+  const { data: before } = id ? await supabase.from('projects').select('slug').eq('id', id).maybeSingle() : { data: null };
   const { data: saved, error } = id
-    ? await supabase.from('projects').update(record).eq('id', id).select('id').single()
-    : await supabase.from('projects').insert(record).select('id').single();
+    ? await supabase.from('projects').update(record).eq('id', id).select('id, slug').single()
+    : await supabase.from('projects').insert(record).select('id, slug').single();
 
   if (error || !saved) {
     if (error?.code === '23505') return { error: 'Já existe um projeto com esse endereço (slug).' };
@@ -132,22 +133,22 @@ export async function saveProject(_prev: ProjectFormState, formData: FormData): 
   });
   if (privateError) return { error: privateError.message };
 
-  revalidatePublicSite();
+  revalidatePublicSite(saved.slug, before?.slug);
   revalidatePath('/admin/projetos');
   redirect(id ? '/admin/projetos?salvo=1' : `/admin/projetos/${saved.id}?criado=1`);
 }
 
 export async function setProjectFlag(id: string, field: 'published' | 'featured', value: boolean) {
   const { supabase } = await requireAdmin();
-  await supabase.from('projects').update({ [field]: value }).eq('id', id);
-  revalidatePublicSite();
+  const { data } = await supabase.from('projects').update({ [field]: value }).eq('id', id).select('slug').maybeSingle();
+  revalidatePublicSite(data?.slug);
   revalidatePath('/admin/projetos');
 }
 
 export async function deleteProject(id: string) {
   const { supabase } = await requireAdmin();
-  await supabase.from('projects').delete().eq('id', id);
-  revalidatePublicSite();
+  const { data } = await supabase.from('projects').delete().eq('id', id).select('slug').maybeSingle();
+  revalidatePublicSite(data?.slug);
   redirect('/admin/projetos');
 }
 
@@ -171,10 +172,10 @@ async function saveGallery(id: string, gallery: GalleryItem[], extra: Record<str
     .from('projects')
     .update({ gallery, ...extra })
     .eq('id', id)
-    .select('gallery, cover_url')
+    .select('slug, gallery, cover_url')
     .single();
   if (error) return { error: error.message };
-  revalidatePublicSite();
+  revalidatePublicSite(data.slug as string);
   return { gallery: data.gallery as GalleryItem[], coverUrl: data.cover_url as string | null };
 }
 
