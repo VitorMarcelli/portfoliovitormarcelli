@@ -240,6 +240,15 @@ export async function captureLiveSite(id: string, target: 'cover' | 'gallery'): 
 
 export async function importFromGithub(fullName: string) {
   const { supabase } = await requireAdmin();
+  // Already imported (a second click, or another tab): open the existing project instead of duplicating it.
+  const { data: existing } = await supabase
+    .from('project_private')
+    .select('project_id')
+    .eq('github_full_name', fullName)
+    .limit(1)
+    .maybeSingle();
+  if (existing) redirect(`/admin/projetos/${existing.project_id}`);
+
   const repo = (await listRepos()).find((r) => r.fullName === fullName);
   if (!repo) redirect('/admin/projetos/importar?erro=repo');
 

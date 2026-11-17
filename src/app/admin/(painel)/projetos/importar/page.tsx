@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { importFromGithub } from '@/actions/admin/projects';
-import { buttonSecondary, EmptyState, PageHeader, timeAgo } from '@/components/admin/ui';
+import ImportButton from '@/components/admin/ImportButton';
+import { EmptyState, PageHeader, timeAgo } from '@/components/admin/ui';
 import { requireAdmin } from '@/lib/auth';
 import { hasGithubToken, listRepos, type GithubRepo } from '@/lib/github';
 
@@ -111,9 +112,7 @@ export default async function ImportPage({ searchParams }: PageProps<'/admin/pro
                     </Link>
                   ) : (
                     <form action={importFromGithub.bind(null, repo.fullName)}>
-                      <button type="submit" className={buttonSecondary}>
-                        Importar como rascunho
-                      </button>
+                      <ImportButton />
                     </form>
                   )}
                 </div>
