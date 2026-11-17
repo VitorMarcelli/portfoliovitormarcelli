@@ -65,13 +65,15 @@ export async function saveProject(_prev: ProjectFormState, formData: FormData): 
   const yearRaw = text(formData, 'year');
   const year = yearRaw ? Number.parseInt(yearRaw, 10) : null;
 
+  // undefined = keep the current cover. Only a new upload or the "remove cover" box changes it
+  // (no file sent used to come back as null and wiped the cover on every save).
   let coverUrl: string | null | undefined;
   try {
-    coverUrl = await uploadPublicFile(supabase, formData.get('cover'), 'covers', slug);
+    coverUrl = (await uploadPublicFile(supabase, formData.get('cover'), 'covers', slug)) ?? undefined;
   } catch (e) {
     return { error: (e as Error).message };
   }
-  if (!coverUrl && formData.get('remove_cover') === 'on') coverUrl = null;
+  if (coverUrl === undefined && formData.get('remove_cover') === 'on') coverUrl = null;
 
   const record = {
     slug,
