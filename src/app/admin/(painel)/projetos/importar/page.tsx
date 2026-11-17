@@ -59,6 +59,18 @@ export default async function ImportPage({ searchParams }: PageProps<'/admin/pro
           <code className="rounded bg-surface-2 px-1">GITHUB_TOKEN</code> nas variáveis da Vercel.
         </p>
       )}
+      {tokenOk && !loadError && repos.length > 0 && !repos.some((r) => r.isPrivate) && (
+        <div role="alert" className="mb-6 rounded-md border border-accent/40 bg-accent/10 px-4 py-3 text-sm leading-relaxed">
+          <p className="font-medium">O token está configurado, mas o GitHub não liberou nenhum repositório privado para ele.</p>
+          <p className="mt-1">
+            Em GitHub → Settings → Developer settings → Personal access tokens, abra o token e confira: em{' '}
+            <strong>Repository access</strong> escolha <strong>All repositories</strong> (assim os projetos novos também entram) e em{' '}
+            <strong>Repository permissions</strong> deixe <strong>Metadata: Read-only</strong>. Se for um token clássico, marque o escopo{' '}
+            <code className="rounded bg-surface-2 px-1">repo</code>. Editando o mesmo token não precisa mexer na Vercel; se gerar um novo, troque o{' '}
+            <code className="rounded bg-surface-2 px-1">GITHUB_TOKEN</code> lá e faça um novo deploy.
+          </p>
+        </div>
+      )}
       {errorKey && ERRORS[errorKey] && (
         <p role="alert" className="mb-6 rounded-md border border-danger/40 bg-danger/10 px-4 py-3 text-sm">
           {ERRORS[errorKey]}
