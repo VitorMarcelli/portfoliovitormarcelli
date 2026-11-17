@@ -137,7 +137,7 @@ export async function saveProject(_prev: ProjectFormState, formData: FormData): 
 
   revalidatePublicSite(saved.slug, before?.slug);
   revalidatePath('/admin/projetos');
-  redirect(id ? '/admin/projetos?salvo=1' : `/admin/projetos/${saved.id}?criado=1`);
+  redirect(id ? `/admin/projetos/${saved.id}?salvo=1` : `/admin/projetos/${saved.id}?criado=1`);
 }
 
 export async function setProjectFlag(id: string, field: 'published' | 'featured', value: boolean) {

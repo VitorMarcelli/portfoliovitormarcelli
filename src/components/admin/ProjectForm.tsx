@@ -10,11 +10,47 @@ import { buttonDanger, buttonPrimary, Field, inputClass, Panel } from './ui';
 interface Props {
   project?: ProjectRow;
   privateData?: ProjectPrivateRow | null;
+  /** Categories already in use, suggested so a typo never creates a new group in the constellation. */
+  categories?: { pt: string; en: string }[];
+}
+
+/** Writing guide shown at the top of the form: one formula and one real example per field. */
+function WritingGuide() {
+  const rows: [string, string, string][] = [
+    ['Título', 'Nome, o que ele faz (até ~60 caracteres)', 'Giro, PDV e retaguarda para adegas'],
+    ['Resumo', 'Para quem é + o que resolve + diferencial, em 1 a 2 frases', 'Loja virtual completa para uma marca de cosméticos naturais, feita sem nenhuma dependência.'],
+    ['O desafio', 'A dor do cliente na linguagem dele, com números se tiver. Sem falar de tecnologia', 'O escritório emitia guia por guia em cinco portais estaduais, todo mês.'],
+    ['A solução', 'O que foi construído, na ordem em que a pessoa usa. Tecnologia só quando explica um ganho. Diga o que ainda não está pronto', 'Um robô entra em cada portal, emite as guias e salva os PDFs organizados por cliente.'],
+    ['Resultados', 'Ganho medido (tempo, erros, custo) ou o estado atual. Nunca invente número', 'Fechamento que levava dois dias passou a rodar em minutos.'],
+    ['Como funciona', '3 a 5 etapas curtas: o que entra → o que o sistema faz → o que sai', 'Pedido no balcão / Baixa no estoque / Nota emitida'],
+    ['Destaques', '4 a 8 capacidades concretas, uma por linha', 'Funciona sem internet e sincroniza depois'],
+    ['Imagens', 'Capa = a tela mais bonita. Galeria com 3 a 6 telas do fluxo principal + 1 no celular, cada uma com legenda', 'Checkout com endereço preenchido pelo CEP'],
+  ];
+  return (
+    <details className="rounded-lg border border-border bg-surface-2/60 px-4 py-3 text-sm">
+      <summary className="cursor-pointer font-medium">Guia de escrita: como deixar a página completa</summary>
+      <dl className="mt-3 grid gap-3">
+        {rows.map(([field, formula, example]) => (
+          <div key={field}>
+            <dt className="font-medium">{field}</dt>
+            <dd className="text-muted">
+              {formula}. <span className="italic">Ex.: “{example}”</span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <ul className="mt-3 list-disc space-y-1 pl-5 text-muted">
+        <li>Projeto de cliente: descreva só pelo segmento (ex.: “escritório contábil”), sem nome, link ou print sem autorização.</li>
+        <li>Sistema com login: marque “Abre numa tela de login” para o site oferecer demonstração sob pedido.</li>
+        <li>Antes de publicar, use “Pré-visualizar” no topo. Depois, gere o link para o cliente em Acessos.</li>
+      </ul>
+    </details>
+  );
 }
 
 const checkbox = 'h-4 w-4 accent-[var(--accent)]';
 
-export default function ProjectForm({ project, privateData }: Props) {
+export default function ProjectForm({ project, privateData, categories = [] }: Props) {
   const [state, action, pending] = useActionState<ProjectFormState, FormData>(saveProject, {});
   const p = project;
   const [repoPrivate, setRepoPrivate] = useState(p?.repo_private ?? false);
@@ -28,28 +64,34 @@ export default function ProjectForm({ project, privateData }: Props) {
       <div className="flex flex-col gap-6 xl:col-span-2">
         <Panel title="Português">
           <div className="grid gap-4">
-            <Field label="Título">
+            <WritingGuide />
+            <Field label="Título" hint='"Nome, o que ele faz", até ~60 caracteres'>
               <input name="title_pt" required defaultValue={p?.title_pt} className={inputClass} />
             </Field>
-            <Field label="Resumo" hint="1 a 2 frases, aparece na listagem">
+            <Field label="Resumo" hint="80 a 280 caracteres: para quem é, o que resolve e o diferencial. Aparece no card e no link compartilhado">
               <textarea name="summary_pt" required rows={3} defaultValue={p?.summary_pt} className={inputClass} />
             </Field>
-            <Field label="Categoria" hint="ex.: Automação fiscal">
-              <input name="category_pt" defaultValue={p?.category_pt ?? ''} className={inputClass} />
+            <Field label="Categoria" hint="escolha uma das sugestões para entrar no grupo certo da constelação">
+              <input name="category_pt" list="categorias-pt" defaultValue={p?.category_pt ?? ''} className={inputClass} />
+              <datalist id="categorias-pt">
+                {categories.map((c) => (
+                  <option key={c.pt} value={c.pt} />
+                ))}
+              </datalist>
             </Field>
-            <Field label="O desafio" hint="qual problema o cliente tinha">
+            <Field label="O desafio" hint="a dor do cliente, com números se tiver; sem falar de tecnologia">
               <textarea name="challenge_pt" rows={4} defaultValue={p?.challenge_pt ?? ''} className={inputClass} />
             </Field>
-            <Field label="A solução" hint="o que foi construído e como">
+            <Field label="A solução" hint="o que foi construído, na ordem de uso; diga o que ainda não está pronto">
               <textarea name="solution_pt" rows={4} defaultValue={p?.solution_pt ?? ''} className={inputClass} />
             </Field>
-            <Field label="Resultados" hint="números e ganhos, se houver">
+            <Field label="Resultados" hint="ganho medido ou estado atual; nunca invente número">
               <textarea name="results_pt" rows={3} defaultValue={p?.results_pt ?? ''} className={inputClass} />
             </Field>
             <Field label="Como funciona" hint="3 a 5 etapas curtas, uma por linha: o que entra, o que o sistema faz, o que sai">
               <textarea name="flow_pt" rows={4} defaultValue={p?.flow_pt?.join('\n') ?? ''} className={inputClass} />
             </Field>
-            <Field label="Destaques" hint="um por linha, até 12">
+            <Field label="Destaques" hint="4 a 8 capacidades concretas, uma por linha">
               <textarea name="highlights_pt" rows={4} defaultValue={p?.highlights_pt.join('\n') ?? ''} className={inputClass} />
             </Field>
             <Field label="Texto livre" hint="usado só quando desafio, solução e resultados estão vazios">
@@ -67,8 +109,15 @@ export default function ProjectForm({ project, privateData }: Props) {
             <Field label="Summary">
               <textarea name="summary_en" rows={3} defaultValue={p?.summary_en ?? ''} className={inputClass} />
             </Field>
-            <Field label="Category">
-              <input name="category_en" defaultValue={p?.category_en ?? ''} className={inputClass} />
+            <Field label="Category" hint="use a tradução da categoria escolhida">
+              <input name="category_en" list="categorias-en" defaultValue={p?.category_en ?? ''} className={inputClass} />
+              <datalist id="categorias-en">
+                {categories
+                  .filter((c) => c.en)
+                  .map((c) => (
+                    <option key={c.en} value={c.en} />
+                  ))}
+              </datalist>
             </Field>
             <Field label="The challenge">
               <textarea name="challenge_en" rows={4} defaultValue={p?.challenge_en ?? ''} className={inputClass} />

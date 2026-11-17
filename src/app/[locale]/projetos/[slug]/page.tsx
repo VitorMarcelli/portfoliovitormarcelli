@@ -11,15 +11,29 @@ import RevealTitle from '@/components/site/RevealTitle';
 import TestimonialCard from '@/components/site/TestimonialCard';
 import TrackedLink from '@/components/site/TrackedLink';
 import { getDictionary, isLocale, localePath } from '@/i18n/dictionaries';
-import { getProject, getTestimonials } from '@/lib/data';
+import { getAdminClient } from '@/lib/auth';
+import { getProject, getTestimonials, localizeProject } from '@/lib/data';
+import type { Locale, Project, ProjectRow } from '@/lib/types';
 
 // Rendered per request from the data cache (tag-invalidated by the panel), never stored whole at the edge:
 // a stored page meant a project opened while still a draft stayed a cached 404 after being published.
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata({ params }: PageProps<'/[locale]/projetos/[slug]'>): Promise<Metadata> {
+/** ?previa=1 opened by the signed-in admin: the project even while it is a draft. */
+async function getPreview(slug: string, locale: Locale, query: Record<string, string | string[] | undefined>): Promise<Project | null> {
+  if (query.previa !== '1') return null;
+  const supabase = await getAdminClient();
+  if (!supabase) return null;
+  const { data } = await supabase.from('projects').select('*').eq('slug', slug).maybeSingle();
+  return data ? localizeProject(data as ProjectRow, locale) : null;
+}
+
+export async function generateMetadata({ params, searchParams }: PageProps<'/[locale]/projetos/[slug]'>): Promise<Metadata> {
   const { locale, slug } = await params;
   if (!isLocale(locale)) return {};
+  const query = await searchParams;
+  const preview = await getPreview(slug, locale, query);
+  if (preview) return { title: `Prévia: ${preview.title}`, robots: { index: false, follow: false } };
   const project = await getProject(slug, locale);
   if (!project) return {};
   // The share image is the generated card in ./opengraph-image.tsx (works even without a cover).
@@ -48,11 +62,18 @@ const paragraphsOf = (text: string | null) =>
 
 const reveal = (ms: number) => ({ '--reveal-delay': `${ms}ms` }) as CSSProperties;
 
-export default async function ProjectPage({ params }: PageProps<'/[locale]/projetos/[slug]'>) {
+export default async function ProjectPage({ params, searchParams }: PageProps<'/[locale]/projetos/[slug]'>) {
   const { locale, slug } = await params;
   if (!isLocale(locale)) notFound();
-  const [project, allTestimonials] = await Promise.all([getProject(slug, locale), getTestimonials(locale)]);
+  const query = await searchParams;
+  const [published, allTestimonials, preview] = await Promise.all([
+    getProject(slug, locale),
+    getTestimonials(locale),
+    getPreview(slug, locale, query),
+  ]);
+  const project = preview ?? published;
   if (!project) notFound();
+  const isDraftPreview = Boolean(preview) && !published;
   const testimonials = allTestimonials.filter((item) => item.projectSlug === project.slug);
   const t = getDictionary(locale);
   const tp = t.projects;
@@ -73,6 +94,11 @@ export default async function ProjectPage({ params }: PageProps<'/[locale]/proje
       data-scene-y="0.2"
       data-scene-scale="0.4"
     >
+      {isDraftPreview && (
+        <p role="status" className="mb-6 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm">
+          Prévia: este projeto ainda é rascunho. Só você, logado no painel, está vendo esta página.
+        </p>
+      )}
       <Link href={`${localePath(locale)}#projetos`} className="text-sm text-muted transition-colors hover:text-accent-text">
         ← {tp.back}
       </Link>

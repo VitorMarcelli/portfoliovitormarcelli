@@ -3,8 +3,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import GalleryManager from '@/components/admin/GalleryManager';
 import ProjectForm from '@/components/admin/ProjectForm';
+import QualityPanel from '@/components/admin/QualityPanel';
 import { PageHeader } from '@/components/admin/ui';
 import { requireAdmin } from '@/lib/auth';
+import { categoryList, projectQuality } from '@/lib/projectQuality';
 import type { ProjectPrivateRow, ProjectRow } from '@/lib/types';
 
 export const metadata: Metadata = { title: 'Editar projeto' };
@@ -13,18 +15,28 @@ export default async function EditProjectPage({ params, searchParams }: PageProp
   const { id } = await params;
   const query = await searchParams;
   const { supabase } = await requireAdmin();
-  const [{ data }, { data: privateData }] = await Promise.all([
+  const [{ data }, { data: privateData }, { data: categoryRows }] = await Promise.all([
     supabase.from('projects').select('*').eq('id', id).maybeSingle(),
     supabase.from('project_private').select('*').eq('project_id', id).maybeSingle(),
+    supabase.from('projects').select('category_pt, category_en').not('category_pt', 'is', null),
   ]);
   if (!data) notFound();
   const project = data as ProjectRow;
+  const categories = categoryList(categoryRows ?? []);
+  const quality = projectQuality(
+    project,
+    categories.map((c) => c.pt),
+  );
 
   const notice = query.importado
-    ? 'Projeto importado do GitHub como rascunho. Revise os textos, adicione imagens e marque "Publicado" quando estiver pronto.'
+    ? 'Projeto importado do GitHub como rascunho. Siga a lista de qualidade abaixo, use "Pré-visualizar" para conferir e publique quando estiver completo.'
     : query.criado
-      ? 'Projeto criado. Agora adicione imagens na galeria.'
-      : null;
+      ? 'Projeto criado. Agora adicione a capa e as imagens na galeria, mais abaixo.'
+      : query.salvo
+        ? project.published
+          ? 'Salvo. O site já mostra a versão nova.'
+          : 'Salvo. O projeto continua como rascunho, só você vê na pré-visualização.'
+        : null;
 
   return (
     <>
@@ -35,13 +47,9 @@ export default async function EditProjectPage({ params, searchParams }: PageProp
         <PageHeader
           title={project.title_pt}
           actions={
-            project.published ? (
-              <Link href={`/projetos/${project.slug}`} target="_blank" className="text-sm font-medium underline underline-offset-4">
-                Ver no site
-              </Link>
-            ) : (
-              <span className="text-sm text-muted">Rascunho (não aparece no site)</span>
-            )
+            <span className={`text-sm ${project.published ? 'text-success' : 'text-muted'}`}>
+              {project.published ? 'Publicado' : 'Rascunho (não aparece no site)'}
+            </span>
           }
         />
       </div>
@@ -50,7 +58,8 @@ export default async function EditProjectPage({ params, searchParams }: PageProp
           {notice}
         </p>
       )}
-      <ProjectForm project={project} privateData={privateData as ProjectPrivateRow | null} />
+      <QualityPanel {...quality} slug={project.slug} published={project.published} />
+      <ProjectForm project={project} privateData={privateData as ProjectPrivateRow | null} categories={categories} />
       <div className="mt-6">
         <GalleryManager
           projectId={project.id}
@@ -62,3 +71,4 @@ export default async function EditProjectPage({ params, searchParams }: PageProp
     </>
   );
 }
+

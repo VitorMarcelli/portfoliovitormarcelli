@@ -154,7 +154,11 @@ export default async function ProjectAccessPage({ searchParams }: PageProps<'/ad
 
       <div className="grid gap-6 xl:grid-cols-5">
         <Panel title="Gerar link para um cliente" className="min-w-0 xl:col-span-2">
-          <ClientLinkBuilder siteUrl={SITE_URL} projects={projects.filter((p) => p.published).map((p) => ({ slug: p.slug, title: p.title_pt }))} />
+          <ClientLinkBuilder
+            siteUrl={SITE_URL}
+            projects={projects.filter((p) => p.published).map((p) => ({ slug: p.slug, title: p.title_pt }))}
+            initialSlug={typeof params.projeto === 'string' ? params.projeto : undefined}
+          />
         </Panel>
 
         <Panel title="Links de clientes abertos" className="min-w-0 xl:col-span-3">

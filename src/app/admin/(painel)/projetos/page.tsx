@@ -4,6 +4,7 @@ import { FlagToggle } from '@/components/admin/ProjectToggles';
 import { buttonPrimary, buttonSecondary, EmptyState, PageHeader } from '@/components/admin/ui';
 import { PROJECT_STATUS_LABELS } from '@/lib/labels';
 import { requireAdmin } from '@/lib/auth';
+import { categoryList, projectQuality } from '@/lib/projectQuality';
 import type { ProjectRow } from '@/lib/types';
 
 export const metadata: Metadata = { title: 'Projetos' };
@@ -17,6 +18,7 @@ export default async function ProjectsAdminPage({ searchParams }: PageProps<'/ad
     .order('sort_order', { ascending: true })
     .order('created_at', { ascending: false });
   const projects = (data ?? []) as ProjectRow[];
+  const known = categoryList(projects).map((c) => c.pt);
 
   return (
     <>
@@ -51,6 +53,7 @@ export default async function ProjectsAdminPage({ searchParams }: PageProps<'/ad
             <thead className="border-b border-border text-muted">
               <tr>
                 <th className="px-4 py-3 font-medium">Projeto</th>
+                <th className="px-4 py-3 font-medium">Página</th>
                 <th className="px-4 py-3 font-medium">Ordem</th>
                 <th className="px-4 py-3 font-medium">Publicado</th>
                 <th className="px-4 py-3 font-medium">Destaque</th>
@@ -77,6 +80,9 @@ export default async function ProjectsAdminPage({ searchParams }: PageProps<'/ad
                       )}
                     </div>
                   </td>
+                  <td className="px-4 py-3">
+                    <QualityBadge project={p} known={known} />
+                  </td>
                   <td className="px-4 py-3 tabular-nums">{p.sort_order}</td>
                   <td className="px-4 py-3">
                     <FlagToggle id={p.id} field="published" value={p.published} label={`Publicar ${p.title_pt}`} />
@@ -96,5 +102,21 @@ export default async function ProjectsAdminPage({ searchParams }: PageProps<'/ad
         </div>
       )}
     </>
+  );
+}
+
+/** "9/12" with a color: red while an essential item is missing, blue while only recommended ones are. */
+function QualityBadge({ project, known }: { project: ProjectRow; known: string[] }) {
+  const { items, done, total } = projectQuality(project, known);
+  const essential = items.some((i) => !i.ok && i.level === 'essential');
+  const tone = essential ? 'border-danger/50 bg-danger/10' : done < total ? 'border-accent/50 bg-accent/10' : 'border-success/50 bg-success/10';
+  return (
+    <Link
+      href={`/admin/projetos/${project.id}`}
+      title={essential ? "Falta item essencial" : done < total ? "Essencial pronto" : "Página completa"}
+      className={`inline-block rounded-full border px-2 py-0.5 text-xs font-medium tabular-nums ${tone}`}
+    >
+      {done}/{total}
+    </Link>
   );
 }

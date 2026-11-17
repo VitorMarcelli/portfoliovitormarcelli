@@ -6,6 +6,7 @@ import { buttonPrimary, buttonSecondary, Field, inputClass } from './ui';
 interface Props {
   siteUrl: string;
   projects: { slug: string; title: string }[];
+  initialSlug?: string;
 }
 
 /** "Carlos Mendes" → "carlos-mendes": the tag the site records for every visit made through the link. */
@@ -19,8 +20,10 @@ export function clientTag(name: string) {
     .slice(0, 60);
 }
 
-export default function ClientLinkBuilder({ siteUrl, projects }: Props) {
-  const [slug, setSlug] = useState(projects[0]?.slug ?? '');
+export default function ClientLinkBuilder({ siteUrl, projects, initialSlug }: Props) {
+  const [slug, setSlug] = useState(
+    initialSlug && projects.some((p) => p.slug === initialSlug) ? initialSlug : (projects[0]?.slug ?? ''),
+  );
   const [client, setClient] = useState('');
   const [english, setEnglish] = useState(false);
   const [copied, setCopied] = useState<'link' | 'message' | null>(null);
